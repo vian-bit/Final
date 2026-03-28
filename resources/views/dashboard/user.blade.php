@@ -1,0 +1,308 @@
+@extends('layouts.app')
+
+@section('title', 'Dashboard User')
+
+@section('content')
+<div class="bg-white rounded-lg shadow p-4 sm:p-6">
+    <h1 class="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Dashboard - {{ Auth::user()->name }}</h1>
+
+    <!-- Early Checkout Request Notifications -->
+    @if($earlyCheckoutRequest)
+        @if($earlyCheckoutRequest->status === 'pending')
+        <div class="mb-4 bg-yellow-50 border-2 border-yellow-400 rounded-lg p-4">
+            <div class="flex items-start gap-3">
+                <div class="text-2xl">⏳</div>
+                <div class="flex-1">
+                    <p class="font-semibold text-yellow-800">Early Checkout Request Pending</p>
+                    <p class="text-sm text-yellow-700 mt-1">
+                        Your request to checkout at {{ $earlyCheckoutRequest->requested_checkout_time }} is waiting for admin approval.
+                    </p>
+                    @if($earlyCheckoutRequest->reason)
+                    <p class="text-xs text-yellow-600 mt-2">
+                        <span class="font-semibold">Your reason:</span> {{ $earlyCheckoutRequest->reason }}
+                    </p>
+                    @endif
+                </div>
+            </div>
+        </div>
+        @elseif($earlyCheckoutRequest->status === 'approved')
+        <div class="mb-4 bg-green-50 border-2 border-green-400 rounded-lg p-4">
+            <div class="flex items-start gap-3">
+                <div class="text-2xl">✅</div>
+                <div class="flex-1">
+                    <p class="font-semibold text-green-800">Early Checkout Request Approved</p>
+                    <p class="text-sm text-green-700 mt-1">
+                        Your early checkout at {{ $earlyCheckoutRequest->requested_checkout_time }} has been approved by {{ $earlyCheckoutRequest->approvedBy->name }}.
+                    </p>
+                    @if($earlyCheckoutRequest->admin_notes)
+                    <p class="text-xs text-green-600 mt-2">
+                        <span class="font-semibold">Admin notes:</span> {{ $earlyCheckoutRequest->admin_notes }}
+                    </p>
+                    @endif
+                </div>
+            </div>
+        </div>
+        @elseif($earlyCheckoutRequest->status === 'rejected')
+        <div class="mb-4 bg-red-50 border-2 border-red-400 rounded-lg p-4">
+            <div class="flex items-start gap-3">
+                <div class="text-2xl">❌</div>
+                <div class="flex-1">
+                    <p class="font-semibold text-red-800">Early Checkout Request Rejected</p>
+                    <p class="text-sm text-red-700 mt-1">
+                        Your request to checkout at {{ $earlyCheckoutRequest->requested_checkout_time }} has been rejected by {{ $earlyCheckoutRequest->approvedBy->name }}.
+                    </p>
+                    <p class="text-sm text-red-700 mt-1">
+                        Please wait until your shift ends at {{ $earlyCheckoutRequest->shift_end_time }} to checkout.
+                    </p>
+                    @if($earlyCheckoutRequest->admin_notes)
+                    <p class="text-xs text-red-600 mt-2 bg-red-100 p-2 rounded">
+                        <span class="font-semibold">Reason for rejection:</span> {{ $earlyCheckoutRequest->admin_notes }}
+                    </p>
+                    @endif
+                </div>
+            </div>
+        </div>
+        @endif
+    @endif
+
+    @if($todaySchedule)
+    <div class="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 sm:p-6 mb-4 sm:mb-6">
+        <h2 class="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Today's Schedule</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <div>
+                <p class="text-gray-600 text-sm">Shift</p>
+                <p class="font-semibold text-lg">{{ $todaySchedule->shift->name }}</p>
+            </div>
+            <div>
+                <p class="text-gray-600 text-sm">Working Hours</p>
+                <p class="font-semibold text-lg">{{ $todaySchedule->shift->start_time }} - {{ $todaySchedule->shift->end_time }}</p>
+            </div>
+        </div>
+
+        <div class="mt-4 sm:mt-6 space-y-3">
+            @if(!$todayAttendance || !$todayAttendance->check_in)
+            <button onclick="confirmCheckIn()" 
+                class="w-full bg-green-500 text-white px-6 py-4 rounded-lg hover:bg-green-600 font-semibold text-lg shadow-lg active:scale-95 transition">
+                ✓ Check In Now
+            </button>
+            <div class="text-center text-gray-600">
+                <span id="current-time" class="font-semibold text-lg"></span>
+            </div>
+            
+            <form method="POST" action="{{ route('attendances.checkin') }}" id="checkinForm" class="hidden">
+                @csrf
+            </form>
+            @elseif(!$todayAttendance->check_out)
+            <div class="bg-green-100 border border-green-300 rounded-lg p-4 mb-3">
+                <p class="text-green-800 font-semibold text-center">
+                    ✓ Checked In: {{ $todayAttendance->check_in }}
+                </p>
+            </div>
+
+            @if($earlyCheckoutRequest && $earlyCheckoutRequest->status === 'pending')
+            {{-- Tombol disabled saat request pending --}}
+            <button disabled
+                class="w-full bg-yellow-400 text-yellow-900 px-6 py-4 rounded-lg font-semibold text-lg shadow cursor-not-allowed opacity-80">
+                ⏳ On Request — Menunggu Persetujuan Admin
+            </button>
+            <p class="text-center text-xs text-yellow-700 mt-1">
+                Request checkout jam {{ $earlyCheckoutRequest->requested_checkout_time }} sedang diproses
+            </p>
+            @else
+            <button onclick="showCheckOutModal()" 
+                class="w-full bg-red-500 text-white px-6 py-4 rounded-lg hover:bg-red-600 font-semibold text-lg shadow-lg active:scale-95 transition">
+                ✓ Check Out Now
+            </button>
+            @endif
+
+            <div class="text-center text-gray-600 mt-2">
+                <span id="current-time" class="font-semibold text-lg"></span>
+            </div>
+            
+            <form method="POST" action="{{ route('attendances.checkout') }}" id="checkoutForm" class="hidden">
+                @csrf
+                <input type="hidden" name="reason" id="checkoutReason">
+            </form>
+            @else
+            <div class="bg-gray-100 border border-gray-300 rounded-lg p-4 space-y-2">
+                <p class="text-gray-700 font-semibold">✓ Check In: {{ $todayAttendance->check_in }}</p>
+                <p class="text-gray-700 font-semibold">✓ Check Out: {{ $todayAttendance->check_out }}</p>
+                <p class="text-green-600 font-semibold text-center mt-2">Attendance Complete!</p>
+            </div>
+            @endif
+        </div>
+    </div>
+    @else
+    <div class="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-4 sm:p-6 mb-4 sm:mb-6">
+        <p class="text-yellow-800 text-center font-semibold">You have no schedule today.</p>
+    </div>
+    @endif
+
+    <div class="mt-4 sm:mt-6">
+        <h2 class="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Recent Attendance History</h2>
+        <div class="overflow-x-auto -mx-4 sm:mx-0">
+            <div class="inline-block min-w-full align-middle">
+                <table class="min-w-full bg-white text-sm">
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th class="px-3 py-2 text-left">Date</th>
+                            <th class="px-3 py-2 text-left">Check In</th>
+                            <th class="px-3 py-2 text-left">Check Out</th>
+                            <th class="px-3 py-2 text-left">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($recentAttendances as $attendance)
+                        <tr class="border-b">
+                            <td class="px-3 py-2 whitespace-nowrap">{{ $attendance->date->format('d/m/Y') }}</td>
+                            <td class="px-3 py-2">{{ $attendance->check_in ?? '-' }}</td>
+                            <td class="px-3 py-2">{{ $attendance->check_out ?? '-' }}</td>
+                            <td class="px-3 py-2">
+                                <span class="px-2 py-1 rounded text-xs font-semibold
+                                    @if($attendance->status == 'present') bg-green-100 text-green-800
+                                    @elseif($attendance->status == 'late') bg-yellow-100 text-yellow-800
+                                    @else bg-red-100 text-red-800 @endif">
+                                    {{ ucfirst($attendance->status) }}
+                                </span>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="4" class="px-3 py-4 text-center text-gray-500">No attendance history yet</td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Early Checkout -->
+<div id="checkoutModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-lg p-6 max-w-md w-full">
+        <h3 class="text-xl font-bold mb-4">Check Out Confirmation</h3>
+        
+        <div id="earlyCheckoutWarning" class="hidden bg-yellow-50 border border-yellow-300 rounded p-3 mb-4">
+            <p class="text-yellow-800 text-sm">
+                ⚠️ You are checking out before shift end time. This requires admin approval.
+            </p>
+        </div>
+
+        <div class="mb-4">
+            <label class="block text-gray-700 mb-2">Reason (optional for early checkout):</label>
+            <textarea id="reasonInput" rows="3" 
+                class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
+                placeholder="Enter reason if checking out early..."></textarea>
+        </div>
+
+        <div class="flex gap-3">
+            <button onclick="submitCheckOut()" 
+                class="flex-1 bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600">
+                Confirm Check Out
+            </button>
+            <button onclick="closeCheckOutModal()" 
+                class="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400">
+                Cancel
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+function updateTime() {
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    const timeString = `Current Time: ${hours}:${minutes}:${seconds}`;
+    
+    const timeElement = document.getElementById('current-time');
+    if (timeElement) {
+        timeElement.textContent = timeString;
+    }
+}
+
+function confirmCheckIn() {
+    if (confirm('Check in now?')) {
+        document.getElementById('checkinForm').submit();
+    }
+}
+
+function showCheckOutModal() {
+    const modal = document.getElementById('checkoutModal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    
+    // Check if early checkout
+    @if($todaySchedule)
+    const now = new Date();
+    const currentTime = now.getHours() * 60 + now.getMinutes();
+    const shiftEndTime = '{{ $todaySchedule->shift->end_time }}';
+    const [endHour, endMinute] = shiftEndTime.split(':').map(Number);
+    const shiftEndMinutes = endHour * 60 + endMinute;
+    
+    if (currentTime < shiftEndMinutes) {
+        document.getElementById('earlyCheckoutWarning').classList.remove('hidden');
+    }
+    @endif
+}
+
+function closeCheckOutModal() {
+    const modal = document.getElementById('checkoutModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    document.getElementById('reasonInput').value = '';
+    document.getElementById('earlyCheckoutWarning').classList.add('hidden');
+}
+
+function submitCheckOut() {
+    const reason = document.getElementById('reasonInput').value;
+    document.getElementById('checkoutReason').value = reason;
+    document.getElementById('checkoutForm').submit();
+}
+
+// Update every second
+setInterval(updateTime, 1000);
+updateTime();
+</script>
+<!-- Change Password Section -->
+<div class="bg-white rounded-lg shadow p-4 sm:p-6 mt-4 sm:mt-6">
+    <h2 class="text-lg sm:text-xl font-semibold mb-4">Ganti Password</h2>
+
+    @if(session('password_success'))
+    <div class="mb-4 bg-green-50 border border-green-300 text-green-800 rounded-lg p-3 text-sm">
+        ✅ {{ session('password_success') }}
+    </div>
+    @endif
+
+    <form method="POST" action="{{ route('profile.change-password') }}">
+        @csrf
+        <div class="mb-4">
+            <label class="block text-gray-700 mb-1 text-sm">Password Saat Ini</label>
+            <input type="password" name="current_password"
+                class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:border-blue-500 @error('current_password') border-red-400 @enderror" required>
+            @error('current_password')
+            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+            @enderror
+        </div>
+        <div class="mb-4">
+            <label class="block text-gray-700 mb-1 text-sm">Password Baru</label>
+            <input type="password" name="new_password"
+                class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:border-blue-500 @error('new_password') border-red-400 @enderror" required>
+            @error('new_password')
+            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+            @enderror
+        </div>
+        <div class="mb-4">
+            <label class="block text-gray-700 mb-1 text-sm">Konfirmasi Password Baru</label>
+            <input type="password" name="new_password_confirmation"
+                class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:border-blue-500" required>
+        </div>
+        <button type="submit" class="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 text-sm">
+            Simpan Password
+        </button>
+    </form>
+</div>
+
+@endsection

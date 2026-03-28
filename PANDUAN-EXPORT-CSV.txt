@@ -1,0 +1,305 @@
+╔════════════════════════════════════════════════════════════╗
+║                                                            ║
+║         PANDUAN EXPORT LAPORAN CSV                         ║
+║         Sistem Absensi Hotel                               ║
+║                                                            ║
+╚════════════════════════════════════════════════════════════╝
+
+
+📊 FITUR EXPORT LAPORAN:
+=========================
+
+Sistem menyediakan 2 format export:
+1. CSV (Excel) - untuk analisis data
+2. PDF (Print) - untuk arsip cetak
+
+
+🎯 CARA EXPORT KE CSV:
+======================
+
+LANGKAH 1 - Login:
+------------------
+Login sebagai Admin atau Superuser:
+- Admin: admin.fo@hotel.com / password
+- Superuser: superadmin@hotel.com / password
+
+
+LANGKAH 2 - Akses Menu Export:
+-------------------------------
+1. Klik menu "Absensi"
+2. Klik tombol "Export Laporan"
+   Atau langsung ke: http://localhost:8000/attendances/export
+
+
+LANGKAH 3 - Pilih Periode:
+---------------------------
+1. Pilih "Tanggal Mulai"
+2. Pilih "Tanggal Akhir"
+3. Klik tombol "Filter"
+
+
+LANGKAH 4 - Download CSV:
+--------------------------
+1. Setelah data muncul
+2. Klik tombol "📊 Download CSV"
+3. File akan otomatis terdownload
+4. Nama file: laporan-absensi-YYYY-MM-DD-HHMMSS.csv
+
+
+LANGKAH 5 - Buka di Excel:
+---------------------------
+1. Buka file CSV yang terdownload
+2. Excel akan otomatis membuka file
+3. Data sudah dalam format tabel
+4. Siap untuk analisis
+
+
+═══════════════════════════════════════════════════════════
+
+
+📋 ISI FILE CSV:
+================
+
+Kolom yang tersedia:
+--------------------
+1. No - Nomor urut
+2. Tanggal - Tanggal absensi (DD/MM/YYYY)
+3. Nama - Nama user
+4. Departemen - Nama departemen
+5. Tipe User - Magang atau Daily Worker
+6. Shift - Nama shift
+7. Jam Shift - Jam mulai - jam selesai
+8. Check In - Jam check in
+9. Check Out - Jam check out
+10. Status - Hadir/Terlambat/Tidak Hadir
+11. Keterangan - Catatan tambahan
+
+
+Contoh Data:
+------------
+No,Tanggal,Nama,Departemen,Tipe User,Shift,Jam Shift,Check In,Check Out,Status,Keterangan
+1,09/03/2024,John Doe,Front Office,Magang,Shift Pagi,08:00 - 16:00,08:05:30,16:02:15,Hadir,-
+2,09/03/2024,Jane Smith,Housekeeping,Daily Worker,Shift Pagi,08:00 - 16:00,08:20:45,16:10:30,Terlambat,-
+
+
+═══════════════════════════════════════════════════════════
+
+
+💡 TIPS PENGGUNAAN:
+===================
+
+1. Export Harian:
+   - Tanggal Mulai: 09/03/2024
+   - Tanggal Akhir: 09/03/2024
+   - Untuk laporan hari ini
+
+2. Export Mingguan:
+   - Tanggal Mulai: 03/03/2024
+   - Tanggal Akhir: 09/03/2024
+   - Untuk laporan 1 minggu
+
+3. Export Bulanan:
+   - Tanggal Mulai: 01/03/2024
+   - Tanggal Akhir: 31/03/2024
+   - Untuk laporan 1 bulan
+
+4. Export Custom:
+   - Pilih tanggal sesuai kebutuhan
+   - Bisa untuk periode apapun
+
+
+═══════════════════════════════════════════════════════════
+
+
+📊 ANALISIS DATA DI EXCEL:
+===========================
+
+Setelah buka file CSV di Excel, Anda bisa:
+
+1. Filter Data:
+   - Klik header kolom
+   - Pilih "Filter"
+   - Filter berdasarkan departemen, status, dll
+
+2. Pivot Table:
+   - Insert > Pivot Table
+   - Analisis data lebih detail
+   - Buat grafik otomatis
+
+3. Hitung Statistik:
+   - Jumlah hadir per departemen
+   - Persentase keterlambatan
+   - Rata-rata jam check in
+
+4. Format Conditional:
+   - Highlight keterlambatan (warna merah)
+   - Highlight hadir tepat waktu (warna hijau)
+
+5. Buat Grafik:
+   - Insert > Chart
+   - Visualisasi data absensi
+   - Trend kehadiran
+
+
+═══════════════════════════════════════════════════════════
+
+
+🎨 FITUR TAMBAHAN:
+==================
+
+1. Print / Save as PDF:
+   - Klik tombol "🖨️ Print / Save as PDF"
+   - Pilih printer atau "Save as PDF"
+   - Untuk arsip cetak
+
+2. Filter Departemen:
+   - Admin hanya lihat departemennya
+   - Superuser lihat semua departemen
+
+3. Encoding UTF-8:
+   - Support karakter Indonesia
+   - Nama dengan huruf khusus tetap benar
+
+4. Auto Filename:
+   - Format: laporan-absensi-2024-03-09-143025.csv
+   - Timestamp otomatis
+   - Tidak akan tertimpa
+
+
+═══════════════════════════════════════════════════════════
+
+
+❓ TROUBLESHOOTING:
+===================
+
+File CSV tidak bisa dibuka?
+----------------------------
+1. Pastikan Excel terinstall
+2. Atau buka dengan Google Sheets
+3. Atau gunakan LibreOffice Calc
+
+
+Karakter aneh di Excel?
+------------------------
+1. Buka Excel
+2. Data > From Text/CSV
+3. Pilih file CSV
+4. Encoding: UTF-8
+5. Import
+
+
+Data tidak muncul?
+------------------
+1. Pastikan ada data di periode tersebut
+2. Cek filter tanggal sudah benar
+3. Pastikan user sudah absen
+
+
+Download tidak jalan?
+----------------------
+1. Cek browser tidak block download
+2. Cek folder Downloads
+3. Coba browser lain
+
+
+═══════════════════════════════════════════════════════════
+
+
+📝 CONTOH PENGGUNAAN:
+=====================
+
+Skenario 1 - Laporan Harian untuk HR:
+--------------------------------------
+1. Login sebagai admin
+2. Export > Pilih hari ini
+3. Download CSV
+4. Kirim ke HR via email
+
+
+Skenario 2 - Analisis Keterlambatan:
+-------------------------------------
+1. Export data 1 bulan
+2. Buka di Excel
+3. Filter status "Terlambat"
+4. Lihat pola keterlambatan
+5. Buat action plan
+
+
+Skenario 3 - Laporan Bulanan:
+------------------------------
+1. Export data bulan lalu
+2. Buat pivot table
+3. Hitung persentase kehadiran
+4. Buat grafik trend
+5. Present ke management
+
+
+Skenario 4 - Audit Absensi:
+----------------------------
+1. Export data 3 bulan
+2. Cross-check dengan payroll
+3. Verifikasi jam kerja
+4. Validasi data
+
+
+═══════════════════════════════════════════════════════════
+
+
+🔐 HAK AKSES:
+=============
+
+Superuser:
+- Export semua departemen
+- Lihat semua data
+- Tidak ada batasan
+
+Admin Departemen:
+- Export departemennya saja
+- Lihat data departemennya
+- Tidak bisa lihat departemen lain
+
+User:
+- Tidak bisa export
+- Hanya lihat data pribadi
+
+
+═══════════════════════════════════════════════════════════
+
+
+✅ CHECKLIST EXPORT:
+====================
+
+□ Login sebagai admin/superuser
+□ Akses menu Export Laporan
+□ Pilih tanggal mulai dan akhir
+□ Klik Filter
+□ Data muncul dengan benar
+□ Klik Download CSV
+□ File terdownload
+□ Buka di Excel
+□ Data lengkap dan benar
+□ Siap untuk analisis
+
+
+═══════════════════════════════════════════════════════════
+
+
+📞 BANTUAN:
+===========
+
+Jika ada masalah:
+1. Cek koneksi internet
+2. Cek browser tidak block download
+3. Coba browser lain
+4. Clear cache browser
+5. Restart server
+
+
+═══════════════════════════════════════════════════════════
+
+Selamat menggunakan fitur export! 📊
+
+File CSV memudahkan analisis data absensi dengan Excel
+atau tools spreadsheet lainnya.
+
+═══════════════════════════════════════════════════════════

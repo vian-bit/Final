@@ -1,0 +1,181 @@
+╔════════════════════════════════════════════════════════════╗
+║                                                            ║
+║         LANGUAGE MAPPING                                   ║
+║         Indonesian → English                               ║
+║                                                            ║
+╚════════════════════════════════════════════════════════════╝
+
+
+GENERAL TERMS:
+==============
+Sistem Absensi Hotel → Hotel Attendance System
+Selamat Datang → Welcome
+Masuk → Login
+Keluar → Logout
+Simpan → Save
+Batal → Cancel
+Hapus → Delete
+Edit → Edit
+Tambah → Add
+Lihat → View
+Cari → Search
+Filter → Filter
+Reset → Reset
+Kembali → Back
+
+
+USER ROLES:
+===========
+Superuser → Superuser
+Admin Departemen → Department Admin
+User → User
+Magang → Intern
+Daily Worker → Daily Worker
+
+
+MENU ITEMS:
+===========
+Dashboard → Dashboard
+Departemen → Departments
+Manajemen User → User Management
+Shift Kerja → Work Shifts
+Jadwal Kerja → Work Schedule
+Kelola Jadwal → Manage Schedule
+Jadwal Saya → My Schedule
+Absensi → Attendance
+Laporan → Reports
+
+
+DEPARTMENTS:
+============
+Front Office → Front Office
+Housekeeping → Housekeeping
+Food & Beverage → Food & Beverage
+Engineering → Engineering
+
+
+ATTENDANCE:
+===========
+Check In → Check In
+Check Out → Check Out
+Hadir → Present
+Terlambat → Late
+Tidak Hadir → Absent
+Libur → Day Off
+Jam Kerja → Working Hours
+Toleransi → Tolerance
+
+
+SCHEDULE:
+=========
+Shift Pagi → Morning Shift
+Shift Siang → Afternoon Shift
+Shift Malam → Night Shift
+Senin → Monday
+Selasa → Tuesday
+Rabu → Wednesday
+Kamis → Thursday
+Jumat → Friday
+Sabtu → Saturday
+Minggu → Sunday
+
+
+MESSAGES:
+=========
+Berhasil → Success / Successful
+Gagal → Failed
+Error → Error
+Peringatan → Warning
+Konfirmasi → Confirmation
+Yakin → Are you sure
+Data berhasil disimpan → Data saved successfully
+Data berhasil dihapus → Data deleted successfully
+Data berhasil diupdate → Data updated successfully
+
+
+FORMS:
+======
+Nama → Name
+Email → Email
+Password → Password
+Tanggal → Date
+Jam → Time
+Keterangan → Notes / Description
+Status → Status
+Aktif → Active
+Nonaktif → Inactive
+
+
+BUTTONS:
+========
+Simpan Semua → Save All
+Hapus Semua → Delete All
+Atur Cepat → Quick Setup
+Download CSV → Download CSV
+Export Laporan → Export Report
+Print → Print
+
+
+VALIDATION:
+===========
+Wajib diisi → Required
+Format tidak valid → Invalid format
+Email sudah digunakan → Email already taken
+Password minimal 8 karakter → Password must be at least 8 characters
+Tanggal tidak valid → Invalid date
+
+
+NOTIFICATIONS:
+==============
+Login berhasil → Login successful
+Logout berhasil → Logout successful
+Check-in berhasil → Check-in successful
+Check-out berhasil → Check-out successful
+Jadwal berhasil disimpan → Schedule saved successfully
+Anda tidak memiliki jadwal hari ini → You have no schedule today
+Anda sudah melakukan check-in → You have already checked in
+Anda belum melakukan check-in → You haven't checked in yet
+
+
+CALENDAR:
+=========
+Bulan Lalu → Previous Month
+Bulan Ini → This Month
+Bulan Depan → Next Month
+Hari Ini → Today
+Hari Lalu → Past Days
+Ada Jadwal → Scheduled
+Pilih User → Select User
+Pilih Shift → Select Shift
+
+
+REPORTS:
+========
+Laporan Absensi → Attendance Report
+Periode → Period
+Tanggal Mulai → Start Date
+Tanggal Akhir → End Date
+Ringkasan → Summary
+Total → Total
+Jumlah → Count
+
+
+TIPS:
+=====
+Tips → Tips
+Catatan → Notes
+Bantuan → Help
+Panduan → Guide
+Dokumentasi → Documentation
+Contoh → Example
+
+
+═══════════════════════════════════════════════════════════
+
+This mapping is used for translating the entire system
+from Indonesian to English.
+
+All views, controllers, and messages should follow
+this translation guide for consistency.
+
+═══════════════════════════════════════════════════════════

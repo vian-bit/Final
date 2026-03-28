@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Generator - Hotel Attendance System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #5568d3;
+        }
+        #qrcode {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            display: none;
+        }
+        #qrcode canvas, #qrcode img {
+            margin: 0 auto;
+            display: block;
+        }
+        .info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2196f3;
+        }
+        .url-display {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            word-break: break-all;
+            font-family: monospace;
+        }
+        .instructions {
+            margin-top: 20px;
+            padding: 15px;
+            background: #fff3cd;
+            border-radius: 5px;
+            border-left: 4px solid #ffc107;
+        }
+        .instructions h3 {
+            margin-top: 0;
+            color: #856404;
+        }
+        .instructions ol {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .instructions li {
+            margin: 5px 0;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔗 QR Code Generator</h1>
+        <h2 style="text-align: center; color: #667eea; margin-top: -20px;">Hotel Attendance System</h2>
+        
+        <div class="info">
+            <strong>📱 Generate QR Code for Easy Access</strong><br>
+            Users can scan this QR code to quickly access the attendance system from their phones.
+        </div>
+
+        <div class="input-group">
+            <label for="ipAddress">Enter Server IP Address:</label>
+            <input type="text" id="ipAddress" placeholder="e.g., 192.168.1.100" value="">
+        </div>
+
+        <button onclick="generateQR()">Generate QR Code</button>
+
+        <div id="qrcode"></div>
+
+        <div class="instructions">
+            <h3>📋 How to Use:</h3>
+            <ol>
+                <li>Run <strong>CHECK-IP.bat</strong> to get your IP address</li>
+                <li>Enter the IP address above (e.g., 192.168.1.100)</li>
+                <li>Click "Generate QR Code"</li>
+                <li>Print or display the QR code</li>
+                <li>Users scan with their phone camera</li>
+                <li>They will be directed to the login page</li>
+            </ol>
+            <p><strong>Note:</strong> Make sure the server is running with <strong>SERVE-LAN.bat</strong></p>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>
+        // Auto-detect IP from URL if opened from server
+        window.onload = function() {
+            const hostname = window.location.hostname;
+            if (hostname !== 'localhost' && hostname !== '127.0.0.1' && hostname !== '') {
+                document.getElementById('ipAddress').value = hostname;
+            }
+        };
+
+        let qrcodeInstance = null;
+
+        function generateQR() {
+            const ip = document.getElementById('ipAddress').value.trim();
+            
+            if (!ip) {
+                alert('Please enter an IP address!');
+                return;
+            }
+
+            // Validate IP format
+            const ipPattern = /^(\d{1,3}\.){3}\d{1,3}$/;
+            if (!ipPattern.test(ip)) {
+                alert('Invalid IP address format! Example: 192.168.1.100');
+                return;
+            }
+
+            const url = `http://${ip}:8000`;
+            const qrcodeDiv = document.getElementById('qrcode');
+            
+            // Clear previous QR code
+            qrcodeDiv.innerHTML = '';
+            qrcodeDiv.style.display = 'block';
+
+            // Add title
+            const title = document.createElement('h3');
+            title.textContent = 'Scan to Access';
+            title.style.color = '#333';
+            title.style.marginBottom = '15px';
+            qrcodeDiv.appendChild(title);
+
+            // Generate QR code
+            qrcodeInstance = new QRCode(qrcodeDiv, {
+                text: url,
+                width: 256,
+                height: 256,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+
+            // Add URL display
+            const urlDisplay = document.createElement('div');
+            urlDisplay.className = 'url-display';
+            urlDisplay.textContent = url;
+            qrcodeDiv.appendChild(urlDisplay);
+
+            // Add download button
+            setTimeout(() => {
+                const downloadBtn = document.createElement('button');
+                downloadBtn.textContent = '💾 Download QR Code';
+                downloadBtn.style.marginTop = '15px';
+                downloadBtn.onclick = downloadQR;
+                qrcodeDiv.appendChild(downloadBtn);
+            }, 100);
+        }
+
+        function downloadQR() {
+            const canvas = document.querySelector('#qrcode canvas');
+            if (canvas) {
+                const url = canvas.toDataURL('image/png');
+                const link = document.createElement('a');
+                link.download = 'attendance-qr-code.png';
+                link.href = url;
+                link.click();
+            }
+        }
+    </script>
+</body>
+</html>

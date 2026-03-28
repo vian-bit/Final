@@ -1,0 +1,140 @@
+========================================
+CARA MENJALANKAN SISTEM ABSENSI HOTEL
+========================================
+
+INSTALASI PERTAMA KALI:
+========================
+
+1. Pastikan Laragon sudah terinstall dan running (Apache + MySQL)
+
+2. Double-click: SETUP-LENGKAP.bat
+   
+3. Script akan otomatis:
+   - Install composer dependencies
+   - Generate application key
+   - Clear cache
+   - Membuat database 'hotel_absensi' (otomatis)
+   - Migrasi tabel-tabel
+   - Mengisi data demo
+
+4. Tunggu sampai selesai
+
+5. Pilih 'Y' untuk menjalankan server
+
+6. Login dengan akun demo:
+   Superuser: superadmin@hotel.com / password
+   Admin FO: admin.fo@hotel.com / password
+   User: john@hotel.com / password
+
+
+CATATAN PENTING:
+================
+✅ Database akan dibuat OTOMATIS oleh Laravel
+✅ Tidak perlu buat database manual di HeidiSQL
+✅ Cukup pastikan MySQL di Laragon sudah running
+
+
+MENJALANKAN SETELAH INSTALASI:
+===============================
+
+Cukup double-click: START-HERE.bat
+Lalu pilih menu [3] Jalankan Server
+
+
+FILE .BAT YANG TERSEDIA:
+=========================
+
+START-HERE.bat
+  → Menu utama untuk semua fungsi
+
+1-install.bat
+  → Install dependencies (hanya sekali)
+
+2-migrate.bat
+  → Migrasi database dan seed data demo
+
+3-serve.bat
+  → Jalankan development server
+
+4-reset-database.bat
+  → Reset database (hapus semua data dan buat ulang)
+
+5-send-whatsapp-report.bat
+  → Kirim laporan absensi via WhatsApp (manual)
+
+6-run-scheduler.bat
+  → Jalankan scheduler untuk kirim laporan otomatis
+
+7-clear-cache.bat
+  → Bersihkan cache (gunakan saat development)
+
+8-optimize.bat
+  → Optimize untuk production
+
+
+KONFIGURASI WHATSAPP (OPSIONAL):
+=================================
+
+1. Daftar di provider WhatsApp API:
+   - Fonnte: https://fonnte.com (Rekomendasi)
+   - Wablas: https://wablas.com
+   
+2. Dapatkan API Key
+
+3. Edit file .env:
+   WHATSAPP_API_URL=https://api.fonnte.com
+   WHATSAPP_API_KEY=your_api_key_here
+   WHATSAPP_PHONE_NUMBER=628123456789
+
+4. Test kirim laporan:
+   Jalankan: 5-send-whatsapp-report.bat
+
+
+TROUBLESHOOTING:
+================
+
+Error "composer not found":
+  → Install Composer atau gunakan Laragon yang sudah include Composer
+
+Error "php not found":
+  → Pastikan Laragon sudah running
+  → Atau tambahkan PHP ke PATH
+
+Error saat migrate:
+  → Pastikan database sudah dibuat
+  → Cek konfigurasi DB di file .env
+  → Pastikan MySQL di Laragon sudah running
+
+Port 8000 sudah digunakan:
+  → Tutup aplikasi yang menggunakan port 8000
+  → Atau edit 3-serve.bat, ganti dengan port lain:
+    php artisan serve --port=8001
+
+
+DOKUMENTASI LENGKAP:
+====================
+
+QUICK_START.md
+  → Panduan cepat 5 menit
+
+INSTALASI.md
+  → Panduan instalasi detail
+
+FITUR_DAN_PENGGUNAAN.md
+  → Panduan lengkap semua fitur
+
+WHATSAPP_INTEGRATION.md
+  → Setup integrasi WhatsApp
+
+
+SUPPORT:
+========
+
+Jika ada masalah:
+1. Cek file log: storage/logs/laravel.log
+2. Jalankan: 7-clear-cache.bat
+3. Restart Laragon
+4. Baca dokumentasi di folder project
+
+
+Selamat menggunakan! 🎉
