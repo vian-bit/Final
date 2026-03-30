@@ -64,4 +64,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('attendances/check-in', [AttendanceController::class, 'checkIn'])->name('attendances.checkin');
     Route::post('attendances/check-out', [AttendanceController::class, 'checkOut'])->name('attendances.checkout');
     Route::post('profile/change-password', [AuthController::class, 'changePassword'])->name('profile.change-password');
+
+    // Profile - semua role
+    Route::get('profile/edit', [\App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('profile/update', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
+    Route::post('profile/change-password', [\App\Http\Controllers\ProfileController::class, 'changePassword'])->name('profile.change-password');
 });

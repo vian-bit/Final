@@ -39,22 +39,4 @@ class AuthController extends Controller
         
         return redirect('/login');
     }
-
-    public function changePassword(Request $request)
-    {
-        $request->validate([
-            'current_password'      => 'required',
-            'new_password'          => 'required|min:8|confirmed',
-        ]);
-
-        $user = Auth::user();
-
-        if (!Hash::check($request->current_password, $user->password)) {
-            return back()->withErrors(['current_password' => 'Password saat ini tidak sesuai.']);
-        }
-
-        $user->update(['password' => Hash::make($request->new_password)]);
-
-        return back()->with('password_success', 'Password berhasil diubah.');
-    }
 }

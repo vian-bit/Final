@@ -6,6 +6,9 @@
 <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-700">
     <div class="bg-white p-8 rounded-lg shadow-2xl w-96">
         <div class="text-center mb-6">
+            @if(file_exists(public_path('images/logo.png')))
+            <img src="{{ asset('images/logo.png') }}" alt="Grandhika Logo" class="w-16 h-16 object-contain mx-auto mb-3">
+            @endif
             <h2 class="text-3xl font-bold text-gray-800">Grandhika Intern and Daily Worker Attendance</h2>
             <p class="text-gray-600 mt-2">Please login to continue</p>
         </div>
