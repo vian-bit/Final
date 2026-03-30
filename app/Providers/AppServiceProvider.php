@@ -19,6 +19,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Auto-set APP_URL mengikuti IP/host dari request yang masuk
+        // Berguna saat server pindah device atau IP berubah
+        if ($this->app->runningInConsole() === false) {
+            $request = $this->app['request'];
+            $url = $request->getScheme() . '://' . $request->getHttpHost();
+            config(['app.url' => $url]);
+            \Illuminate\Support\Facades\URL::forceRootUrl($url);
+        }
     }
 }

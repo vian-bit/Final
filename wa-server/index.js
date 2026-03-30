@@ -16,7 +16,7 @@ process.on('unhandledRejection', (reason) => {
 const app         = express();
 const PORT        = process.env.WA_SERVER_PORT || 3000;
 const SECRET      = process.env.WA_SECRET_KEY  || 'rahasia123';
-const LARAVEL_PORT = process.env.LARAVEL_PORT  || 8000;
+const LARAVEL_URL = process.env.LARAVEL_URL    || `http://127.0.0.1:${process.env.LARAVEL_PORT || 8000}`;
 
 app.use(express.json());
 
@@ -71,7 +71,7 @@ async function connectToWhatsApp() {
 
             // Kirim ke Laravel untuk diproses
             try {
-                const res = await fetch(`http://localhost:${LARAVEL_PORT}/wa-webhook`, {
+                const res = await fetch(`${LARAVEL_URL}/wa-webhook`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

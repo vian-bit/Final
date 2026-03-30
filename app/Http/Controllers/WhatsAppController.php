@@ -289,18 +289,48 @@ class WhatsAppController extends Controller
             'department_id' => $deptId,
         ], now()->addMinutes(10));
 
-        $appUrl = rtrim(config('app.url'), '/');
-        $url    = "{$appUrl}/dl/{$token}";
+        // Ambil IP lokal server agar bisa diakses dari device lain (HP, dll)
+        $serverIp = $this->getServerLocalIp();
+        $port     = parse_url(config('app.url'), PHP_URL_PORT) ?? 8000;
+        $appUrl   = "http://{$serverIp}:{$port}";
+        $url      = "{$appUrl}/dl/{$token}";
 
         $label = $startDate === $endDate
             ? Carbon::parse($startDate)->format('d/m/Y')
             : Carbon::parse($startDate)->format('d/m/Y') . ' s/d ' . Carbon::parse($endDate)->format('d/m/Y');
 
-        // Kirim 2 pesan: info dulu, lalu link sendiri agar bisa diklik langsung
         return [
             "📊 *Export Absensi Excel*\n🏢 {$deptName}\n📅 {$label}\n⏳ _Link berlaku 10 menit_",
             $url,
         ];
+    }
+
+    /**
+     * Ambil IP lokal server (192.168.x.x) agar link bisa diakses dari device lain
+     */
+    protected function getServerLocalIp(): string
+    {
+        // Coba resolve via stream connection (tidak butuh extension sockets)
+        try {
+            $sock = @stream_socket_client('udp://8.8.8.8:80', $errno, $errstr, 1);
+            if ($sock) {
+                $ip = stream_socket_get_name($sock, false);
+                fclose($sock);
+                $ip = explode(':', $ip)[0]; // hapus port
+                if ($ip && $ip !== '0.0.0.0' && $ip !== '127.0.0.1') return $ip;
+            }
+        } catch (\Exception $e) {}
+
+        // Fallback: pakai APP_URL jika sudah diset ke IP lokal
+        $urlHost = parse_url(config('app.url'), PHP_URL_HOST);
+        if ($urlHost && $urlHost !== 'localhost' && $urlHost !== '127.0.0.1') {
+            return $urlHost;
+        }
+
+        // Last resort
+        $hostname = gethostname();
+        $ip = $hostname ? gethostbyname($hostname) : '127.0.0.1';
+        return ($ip && $ip !== $hostname) ? $ip : '127.0.0.1';
     }
 
     protected function buildHelpMessage(): string
