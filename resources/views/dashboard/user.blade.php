@@ -4,7 +4,10 @@
 
 @section('content')
 <div class="bg-white rounded-lg shadow p-4 sm:p-6">
-    <h1 class="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Dashboard - {{ Auth::user()->name }}</h1>
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 gap-1">
+        <h1 class="text-xl sm:text-2xl font-bold">Dashboard - {{ Auth::user()->name }}</h1>
+        <p class="text-gray-500 text-sm">{{ \Carbon\Carbon::now('Asia/Jakarta')->translatedFormat('l, d F Y') }}</p>
+    </div>
 
     <!-- Early Checkout Request Notifications -->
     @if($earlyCheckoutRequest)
@@ -116,7 +119,7 @@
             @endif
 
             <div class="text-center text-gray-600 mt-2">
-                <span id="current-time" class="font-semibold text-lg"></span>
+                <span class="text-sm text-gray-500">Working Time: </span><span id="work-duration" class="font-semibold text-lg"></span>
             </div>
             
             <form method="POST" action="{{ route('attendances.checkout') }}" id="checkoutForm" class="hidden">
@@ -148,6 +151,7 @@
                             <th class="px-3 py-2 text-left">Date</th>
                             <th class="px-3 py-2 text-left">Check In</th>
                             <th class="px-3 py-2 text-left">Check Out</th>
+                            <th class="px-3 py-2 text-left">Durasi</th>
                             <th class="px-3 py-2 text-left">Status</th>
                         </tr>
                     </thead>
@@ -157,6 +161,17 @@
                             <td class="px-3 py-2 whitespace-nowrap">{{ $attendance->date->format('d/m/Y') }}</td>
                             <td class="px-3 py-2">{{ $attendance->check_in ?? '-' }}</td>
                             <td class="px-3 py-2">{{ $attendance->check_out ?? '-' }}</td>
+                            <td class="px-3 py-2">
+                                @if($attendance->check_in && $attendance->check_out)
+                                    @php
+                                        $diff = \Carbon\Carbon::createFromFormat('H:i:s', $attendance->check_in)
+                                            ->diff(\Carbon\Carbon::createFromFormat('H:i:s', $attendance->check_out));
+                                    @endphp
+                                    {{ $diff->h }}j {{ $diff->i }}m
+                                @else
+                                    -
+                                @endif
+                            </td>
                             <td class="px-3 py-2">
                                 <span class="px-2 py-1 rounded text-xs font-semibold
                                     @if($attendance->status == 'present') bg-green-100 text-green-800
@@ -168,7 +183,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="4" class="px-3 py-4 text-center text-gray-500">No attendance history yet</td>
+                            <td colspan="5" class="px-3 py-4 text-center text-gray-500">No attendance history yet</td>
                         </tr>
                         @endforelse
                     </tbody>
@@ -210,16 +225,19 @@
 </div>
 
 <script>
+@if($todayAttendance && $todayAttendance->check_in && !$todayAttendance->check_out)
+const checkInTimestamp = {{ \Carbon\Carbon::parse($todayAttendance->date->format('Y-m-d') . ' ' . $todayAttendance->check_in)->timestamp }};
+@endif
+
 function updateTime() {
-    const now = new Date();
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const seconds = String(now.getSeconds()).padStart(2, '0');
-    const timeString = `Current Time: ${hours}:${minutes}:${seconds}`;
-    
-    const timeElement = document.getElementById('current-time');
-    if (timeElement) {
-        timeElement.textContent = timeString;
+    const durationElement = document.getElementById('work-duration');
+    if (durationElement && typeof checkInTimestamp !== 'undefined') {
+        const nowSec = Math.floor(Date.now() / 1000);
+        const diffSec = Math.max(0, nowSec - checkInTimestamp);
+        const h = String(Math.floor(diffSec / 3600)).padStart(2, '0');
+        const m = String(Math.floor((diffSec % 3600) / 60)).padStart(2, '0');
+        const s = String(diffSec % 60).padStart(2, '0');
+        durationElement.textContent = `${h}:${m}:${s}`;
     }
 }
 

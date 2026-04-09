@@ -112,89 +112,86 @@ class WhatsAppController extends Controller
             $user->update(['wa_lid' => $rawId]);
         }
 
-        // --- Nomor belum terdaftar: alur verifikasi otomatis ---
+        // Nomor tidak terdaftar — coba alur link via perintah "link <email>"
         if (!$user) {
-            $cacheKey = "wa_verify:{$from}";
+            \Illuminate\Support\Facades\Log::info("WA webhook: unregistered {$from}, text: {$textL}");
 
-            // Cek apakah sedang dalam proses verifikasi (menunggu email)
-            if (\Illuminate\Support\Facades\Cache::has($cacheKey)) {
-                // Admin sedang balas dengan email
-                $candidate = User::where('email', $textL)
+            // Jika pesan adalah "link <email>", coba daftarkan wa_lid
+            if (str_starts_with($textL, 'link ')) {
+                $email = trim(substr($textL, 5));
+                $candidate = User::where('email', $email)
                     ->whereIn('role', ['admin', 'superuser'])
                     ->where('is_active', true)
                     ->first();
 
                 if ($candidate) {
-                    // Cocok — simpan wa_lid dan selesai
                     $candidate->update(['wa_lid' => $rawId]);
-                    \Illuminate\Support\Facades\Cache::forget($cacheKey);
                     return response()->json([
-                        'reply' => "✅ Verifikasi berhasil!\n\nHalo *{$candidate->name}*, nomor kamu sudah terdaftar.\nKetik *help* untuk melihat perintah yang tersedia."
-                    ]);
-                } else {
-                    // Email tidak cocok, beri kesempatan coba lagi
-                    \Illuminate\Support\Facades\Cache::put($cacheKey, true, now()->addMinutes(5));
-                    return response()->json([
-                        'reply' => "❌ Email tidak ditemukan atau bukan admin.\n\nCoba lagi — balas dengan email yang terdaftar di sistem:"
+                        'reply' => "✅ Berhasil!\n\nHalo *{$candidate->name}*, nomor kamu sudah terhubung.\nKetik *help* untuk melihat perintah."
                     ]);
                 }
+
+                return response()->json([
+                    'reply' => "❌ Email tidak ditemukan atau bukan admin."
+                ]);
             }
 
-            // Pertama kali — minta verifikasi email
-            \Illuminate\Support\Facades\Cache::put($cacheKey, true, now()->addMinutes(5));
+            // Pesan lain dari nomor tidak terdaftar — abaikan
+            \Illuminate\Support\Facades\Log::info("WA webhook: ignored message from unregistered number {$from}");
+            return response()->json(['reply' => null]);
+        }
+
+        // Perintah "link" dari user yang sudah terdaftar — konfirmasi sudah terdaftar
+        if (str_starts_with($textL, 'link ')) {
             return response()->json([
-                'reply' => "🏨 *Grandhika Intern and Daily Worker Attendance*\n\n"
-                    . "Nomor kamu belum terdaftar di sistem.\n\n"
-                    . "Untuk verifikasi, balas dengan *email* akun admin kamu:\n"
-                    . "_Contoh: admin@hotel.com_\n\n"
-                    . "_Verifikasi berlaku 5 menit._"
+                'reply' => "✅ Nomor kamu sudah terdaftar, *{$user->name}*!\nKetik *help* untuk melihat perintah."
             ]);
         }
 
         $reply = $this->processCommand($textL, $user);
-        return response()->json(['reply' => $reply]);
+        return response()->json(['reply' => $reply ?: null]);
     }
 
     /**
      * Proses perintah dari admin via WA
      */
-    protected function processCommand(string $text, User $user): string|array
-    {
-        $deptId   = $user->isSuperuser() ? null : $user->department_id;
-        $deptName = $user->isSuperuser() ? 'Semua Departemen' : $user->department->name;
+    protected function processCommand(string $text, User $user): string|array|null
+        {
+            $deptId   = $user->isSuperuser() ? null : $user->department_id;
+            $deptName = $user->isSuperuser() ? 'Semua Departemen' : $user->department->name;
 
-        // Perintah: rekap / rekap YYYY-MM-DD
-        if (str_starts_with($text, 'rekap')) {
-            $parts = explode(' ', $text);
-            $date  = isset($parts[1]) ? Carbon::parse($parts[1]) : today();
-            return $this->buildRekapMessage($deptId, $deptName, $date);
+            // Perintah: rekap / rekap YYYY-MM-DD
+            if (str_starts_with($text, 'rekap')) {
+                $parts = explode(' ', $text);
+                $date  = isset($parts[1]) ? Carbon::parse($parts[1]) : today();
+                return $this->buildRekapMessage($deptId, $deptName, $date);
+            }
+
+            // Perintah: export / export YYYY-MM-DD / export YYYY-MM-DD YYYY-MM-DD
+            if (str_starts_with($text, 'export')) {
+                $parts = explode(' ', $text);
+                $start = isset($parts[1]) ? $parts[1] : today()->format('Y-m-d');
+                $end   = isset($parts[2]) ? $parts[2] : $start;
+                return $this->buildExportLink($deptId, $deptName, $start, $end);
+            }
+
+            // Perintah: absen (siapa yang belum absen hari ini)
+            if ($text === 'absen' || $text === 'belum absen') {
+                return $this->buildBelumAbsenMessage($deptId, $deptName);
+            }
+
+            // Perintah: terlambat
+            if ($text === 'terlambat' || $text === 'late') {
+                return $this->buildTerlambatMessage($deptId, $deptName);
+            }
+
+            // Perintah: help / bantuan
+            if (in_array($text, ['help', 'bantuan', 'menu', '?'])) {
+                return $this->buildHelpMessage();
+            }
+
+            return "❓ Perintah tidak dikenal.\n\nKetik *help* untuk melihat daftar perintah.";
         }
-
-        // Perintah: export / export YYYY-MM-DD / export YYYY-MM-DD YYYY-MM-DD
-        if (str_starts_with($text, 'export')) {
-            $parts = explode(' ', $text);
-            $start = isset($parts[1]) ? $parts[1] : today()->format('Y-m-d');
-            $end   = isset($parts[2]) ? $parts[2] : $start;
-            return $this->buildExportLink($deptId, $deptName, $start, $end);
-        }
-
-        // Perintah: absen (siapa yang belum absen hari ini)
-        if ($text === 'absen' || $text === 'belum absen') {
-            return $this->buildBelumAbsenMessage($deptId, $deptName);
-        }
-
-        // Perintah: terlambat
-        if ($text === 'terlambat' || $text === 'late') {
-            return $this->buildTerlambatMessage($deptId, $deptName);
-        }
-
-        // Perintah: help / bantuan
-        if (in_array($text, ['help', 'bantuan', 'menu', '?'])) {
-            return $this->buildHelpMessage();
-        }
-
-        return "❓ Perintah tidak dikenal.\n\nKetik *help* untuk melihat daftar perintah.";
-    }
 
     protected function buildRekapMessage(?int $deptId, string $deptName, Carbon $date): string
     {
@@ -334,17 +331,18 @@ class WhatsAppController extends Controller
     }
 
     protected function buildHelpMessage(): string
-    {
-        return "🏨 *Grandhika Intern and Daily Worker Attendance*\n"
-            . "Daftar perintah yang tersedia:\n\n"
-            . "📊 *rekap* — rekap absensi hari ini\n"
-            . "📊 *rekap 2026-03-15* — rekap tanggal tertentu\n"
-            . "📥 *export* — download Excel hari ini\n"
-            . "📥 *export 2026-03-15* — download Excel tanggal tertentu\n"
-            . "📥 *export 2026-03-01 2026-03-16* — download Excel rentang tanggal\n"
-            . "⚠️ *absen* — siapa yang belum absen hari ini\n"
-            . "⏰ *terlambat* — siapa yang terlambat hari ini\n"
-            . "❓ *help* — tampilkan menu ini\n\n"
-            . "_Hanya admin terdaftar yang dapat menggunakan bot ini._";
-    }
+        {
+            return "🏨 *Grandhika Intern and Daily Worker Attendance*\n"
+                . "Daftar perintah yang tersedia:\n\n"
+                . "📊 *rekap* — rekap absensi hari ini\n"
+                . "📊 *rekap 2026-03-15* — rekap tanggal tertentu\n"
+                . "📥 *export* — download Excel hari ini\n"
+                . "📥 *export 2026-03-15* — download Excel tanggal tertentu\n"
+                . "📥 *export 2026-03-01 2026-03-16* — download Excel rentang tanggal\n"
+                . "⚠️ *absen* — siapa yang belum absen hari ini\n"
+                . "⏰ *terlambat* — siapa yang terlambat hari ini\n"
+                . "❓ *help* — tampilkan menu ini\n"
+                . "🔗 *link email@kamu.com* — hubungkan nomor WA ke akun\n\n"
+                . "_Hanya admin terdaftar yang dapat menggunakan bot ini._";
+        }
 }

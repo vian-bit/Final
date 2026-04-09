@@ -88,16 +88,20 @@ async function connectToWhatsApp() {
                     return;
                 }
 
+                console.log(`📡 Laravel response status: ${res.status}`);
                 const data = await res.json();
+                console.log(`📡 Laravel response data:`, JSON.stringify(data));
 
                 if (data.reply) {
                     // Support single string atau array of strings (multiple messages)
                     const replies = Array.isArray(data.reply) ? data.reply : [data.reply];
-                    for (const msg of replies) {
-                        await sock.sendMessage(from, { text: msg });
+                    for (const replyMsg of replies) {
+                        await sock.sendMessage(from, { text: replyMsg });
                         if (replies.length > 1) await new Promise(r => setTimeout(r, 500));
                     }
                     console.log(`↩️  Balas ke ${from}: ${replies[0].substring(0, 50)}...`);
+                } else {
+                    console.log(`🚫 Abaikan pesan dari nomor tidak terdaftar: ${from}`);
                 }
             } catch (err) {
                 console.error('Gagal proses pesan:', err.message);

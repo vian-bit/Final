@@ -4,7 +4,10 @@
 
 @section('content')
 <div class="bg-white rounded-lg shadow p-4 md:p-6">
-    <h1 class="text-xl md:text-2xl font-bold mb-4 md:mb-6">Admin Dashboard - {{ Auth::user()->department->name }}</h1>
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 md:mb-6 gap-1">
+        <h1 class="text-xl md:text-2xl font-bold">Admin Dashboard - {{ Auth::user()->department->name }}</h1>
+        <p class="text-gray-500 text-sm">{{ \Carbon\Carbon::now('Asia/Jakarta')->translatedFormat('l, d F Y') }}</p>
+    </div>
 
     <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-4 md:mb-6">
         <div class="bg-blue-100 p-4 md:p-6 rounded-lg">

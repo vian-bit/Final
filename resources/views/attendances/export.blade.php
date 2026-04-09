@@ -57,6 +57,7 @@
                     <th class="px-2 md:px-4 py-2 border text-left">Shift</th>
                     <th class="px-2 md:px-4 py-2 border text-left">Check In</th>
                     <th class="px-2 md:px-4 py-2 border text-left">Check Out</th>
+                    <th class="px-2 md:px-4 py-2 border text-left hidden md:table-cell">Durasi</th>
                     <th class="px-2 md:px-4 py-2 border text-left">Status</th>
                 </tr>
             </thead>
@@ -77,6 +78,18 @@
                     <td class="px-2 md:px-4 py-2 border">{{ $attendance->schedule->shift->name }}</td>
                     <td class="px-2 md:px-4 py-2 border">{{ $attendance->check_in ?? '-' }}</td>
                     <td class="px-2 md:px-4 py-2 border">{{ $attendance->check_out ?? '-' }}</td>
+                    <td class="px-2 md:px-4 py-2 border hidden md:table-cell">
+                        @if($attendance->check_in && $attendance->check_out)
+                            @php
+                                $in  = \Carbon\Carbon::createFromFormat('H:i:s', $attendance->check_in);
+                                $out = \Carbon\Carbon::createFromFormat('H:i:s', $attendance->check_out);
+                                $diff = $in->diff($out);
+                            @endphp
+                            {{ $diff->h }}j {{ $diff->i }}m
+                        @else
+                            -
+                        @endif
+                    </td>
                     <td class="px-2 md:px-4 py-2 border">
                         @if($attendance->status == 'present')
                             <span class="text-green-600">Present</span>
@@ -89,7 +102,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="9" class="px-2 md:px-4 py-4 text-center text-gray-500">No data found</td>
+                    <td colspan="10" class="px-2 md:px-4 py-4 text-center text-gray-500">No data found</td>
                 </tr>
                 @endforelse
             </tbody>
