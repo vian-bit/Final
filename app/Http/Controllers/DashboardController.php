@@ -63,7 +63,7 @@ class DashboardController extends Controller
 
     private function userDashboard()
     {
-        $user = Auth::user();
+        $user = Auth::user()->load('department');
         
         $todayAttendance = Attendance::where('user_id', $user->id)
             ->whereDate('date', today())
