@@ -33,6 +33,11 @@ class WhatsAppService
         return $this->sendMessage($phone, $message);
     }
 
+    public function sendBulkPublic(array $targets): void
+    {
+        $this->sendBulk($targets);
+    }
+
     /**
      * Kirim rekap harian ke semua admin per departemen (dipanggil scheduler)
      */

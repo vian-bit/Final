@@ -14,6 +14,18 @@ class Kernel extends ConsoleKernel
             ->dailyAt('17:00')
             ->timezone('Asia/Jakarta')
             ->withoutOverlapping();
+
+        // Kirim reminder check-in setiap menit (command sendiri yang filter shift 10 menit lagi)
+        $schedule->command('attendance:send-checkin-reminder')
+            ->everyMinute()
+            ->timezone('Asia/Jakarta')
+            ->withoutOverlapping();
+
+        // Kirim reminder check-out setiap menit (command sendiri yang filter shift selesai 10 menit lagi)
+        $schedule->command('attendance:send-checkout-reminder')
+            ->everyMinute()
+            ->timezone('Asia/Jakarta')
+            ->withoutOverlapping();
     }
 
     protected function commands(): void
