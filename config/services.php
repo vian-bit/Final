@@ -37,7 +37,7 @@ return [
 
     // Baileys WhatsApp Gateway (wa-server lokal)
     'whatsapp' => [
-        'server_url'   => env('WHATSAPP_SERVER_URL', 'http://localhost:3000'),
+        'server_url'   => env('WHATSAPP_SERVER_URL', 'http://202.155.18.115:3000'),
         'api_key'      => env('WHATSAPP_API_KEY', 'rahasia123'),
         'phone_number' => env('WHATSAPP_PHONE_NUMBER'), // nomor tujuan default (manual send)
     ],

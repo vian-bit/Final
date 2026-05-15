@@ -209,7 +209,7 @@
 <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
 
 <!-- ── Mobile Sidebar ── -->
-<aside class="mobile-menu fixed top-0 left-0 w-64 h-full z-50 lg:hidden overflow-y-auto"
+<aside id="mobileMenu" class="mobile-menu fixed top-0 left-0 w-64 h-full z-50 lg:hidden overflow-y-auto"
     style="background: var(--white); box-shadow: 4px 0 20px rgba(0,0,0,0.12);">
     <div class="p-4 flex justify-between items-center" style="background: var(--brown-700);">
         <span class="brand-font text-sm tracking-widest" style="color: var(--brown-300);">MENU</span>
@@ -264,12 +264,19 @@
 
 <script>
     function toggleMenu() {
-        document.getElementById('mobileMenu')?.classList.toggle('active');
-        document.getElementById('overlay')?.classList.toggle('active');
+        const menu = document.getElementById('mobileMenu');
+        const overlay = document.getElementById('overlay');
+        if (menu) menu.classList.toggle('active');
+        if (overlay) overlay.classList.toggle('active');
     }
-    // Close mobile menu on link click
     document.addEventListener('DOMContentLoaded', () => {
-        document.querySelectorAll('.mobile-menu a').forEach(l => l.addEventListener('click', toggleMenu));
+        // Tutup menu saat link diklik
+        document.querySelectorAll('#mobileMenu a').forEach(l => {
+            l.addEventListener('click', () => {
+                document.getElementById('mobileMenu')?.classList.remove('active');
+                document.getElementById('overlay')?.classList.remove('active');
+            });
+        });
     });
 </script>
 @endauth
