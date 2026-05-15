@@ -1,109 +1,93 @@
 @extends('layouts.app')
-
 @section('title', 'My Work Schedule')
-
 @section('content')
-<div class="bg-white rounded-lg shadow p-4 md:p-6">
-    <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-4 md:mb-6 gap-3">
-        <h1 class="text-xl md:text-2xl font-bold">Work Schedule - {{ $date->format('F Y') }}</h1>
-        
-        <div class="flex gap-2 overflow-x-auto">
-            <a href="{{ route('schedules.calendar', ['month' => $date->copy()->subMonth()->format('Y-m')]) }}" 
-               class="bg-gray-300 text-gray-700 px-3 py-2 rounded hover:bg-gray-400 text-sm whitespace-nowrap">
-                ← Previous
-            </a>
-            <a href="{{ route('schedules.calendar', ['month' => now()->format('Y-m')]) }}" 
-               class="bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 text-sm whitespace-nowrap">
-                This Month
-            </a>
-            <a href="{{ route('schedules.calendar', ['month' => $date->copy()->addMonth()->format('Y-m')]) }}" 
-               class="bg-gray-300 text-gray-700 px-3 py-2 rounded hover:bg-gray-400 text-sm whitespace-nowrap">
-                Next →
-            </a>
+<div class="gh-card" style="padding:0; overflow:hidden;">
+    <div class="gh-card-header flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+        <h1 class="font-header" style="letter-spacing:0.1em;">Work Schedule — {{ $date->format('F Y') }}</h1>
+        <div class="flex gap-2">
+            <a href="{{ route('schedules.calendar', ['month' => $date->copy()->subMonth()->format('Y-m')]) }}"
+               class="btn btn-secondary text-xs px-3 py-1.5">← Prev</a>
+            <a href="{{ route('schedules.calendar', ['month' => now()->format('Y-m')]) }}"
+               class="btn btn-gold text-xs px-3 py-1.5">This Month</a>
+            <a href="{{ route('schedules.calendar', ['month' => $date->copy()->addMonth()->format('Y-m')]) }}"
+               class="btn btn-secondary text-xs px-3 py-1.5">Next →</a>
         </div>
     </div>
 
-    <div class="grid grid-cols-7 gap-1 md:gap-2">
-        <!-- Header Hari -->
-        @foreach(['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as $day)
-        <div class="bg-blue-600 text-white text-center font-semibold py-2 rounded text-xs md:text-base">
-            {{ $day }}
-        </div>
-        @endforeach
-
-        <!-- Tanggal -->
-        @php
-            $startOfMonth = $date->copy()->startOfMonth();
-            $endOfMonth = $date->copy()->endOfMonth();
-            $startDay = $startOfMonth->dayOfWeek;
-            $daysInMonth = $startOfMonth->daysInMonth;
-            $today = now()->format('Y-m-d');
-        @endphp
-
-        <!-- Empty cells sebelum tanggal 1 -->
-        @for($i = 0; $i < $startDay; $i++)
-        <div class="bg-gray-100 p-1 md:p-2 rounded min-h-16 md:min-h-24"></div>
-        @endfor
-
-        <!-- Tanggal dalam bulan -->
-        @for($day = 1; $day <= $daysInMonth; $day++)
-        @php
-            $currentDate = $date->copy()->day($day);
-            $dateKey = $currentDate->format('Y-m-d');
-            $schedule = $schedules->get($dateKey);
-            $isToday = $dateKey === $today;
-            $isPast = $currentDate->lt(now()->startOfDay());
-        @endphp
-        <div class="border-2 {{ $isToday ? 'border-blue-500 bg-blue-50' : 'border-gray-200' }} p-1 md:p-2 rounded min-h-16 md:min-h-24 {{ $isPast ? 'bg-gray-50' : '' }}">
-            <div class="font-semibold {{ $isToday ? 'text-blue-600' : 'text-gray-700' }} text-xs md:text-base">
+    <div class="p-4">
+        <div class="grid grid-cols-7 gap-1 md:gap-2">
+            @foreach(['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as $day)
+            <div class="text-center py-2 rounded text-xs font-bold" style="background:linear-gradient(135deg,var(--brown-900),var(--brown-600)); color:var(--cream-50); letter-spacing:0.06em;">
                 {{ $day }}
-                @if($isToday)
-                <span class="text-xs bg-blue-600 text-white px-1 rounded hidden md:inline">Today</span>
+            </div>
+            @endforeach
+
+            @php
+                $startOfMonth = $date->copy()->startOfMonth();
+                $startDay = $startOfMonth->dayOfWeek;
+                $daysInMonth = $startOfMonth->daysInMonth;
+                $today = now()->format('Y-m-d');
+            @endphp
+
+            @for($i = 0; $i < $startDay; $i++)
+            <div class="rounded min-h-16 md:min-h-24" style="background:var(--cream-200);"></div>
+            @endfor
+
+            @for($day = 1; $day <= $daysInMonth; $day++)
+            @php
+                $currentDate = $date->copy()->day($day);
+                $dateKey = $currentDate->format('Y-m-d');
+                $schedule = $schedules->get($dateKey);
+                $isToday = $dateKey === $today;
+                $isPast = $currentDate->lt(now()->startOfDay());
+            @endphp
+            <div class="p-1 md:p-2 rounded min-h-16 md:min-h-24"
+                style="border:2px solid {{ $isToday ? 'var(--brown-300)' : 'var(--cream-200)' }};
+                       background:{{ $isToday ? 'rgba(201,168,76,0.08)' : ($isPast ? 'var(--cream-200)' : 'var(--cream-50)') }};">
+                <div class="text-xs md:text-sm font-bold mb-1"
+                    style="color:{{ $isToday ? 'var(--brown-300)' : 'var(--brown-900)' }};">
+                    {{ $day }}
+                    @if($isToday)
+                    <span class="hidden md:inline text-xs px-1 rounded" style="background:var(--brown-300); color:var(--brown-900);">Today</span>
+                    @endif
+                </div>
+                @if($schedule)
+                <div class="rounded p-1" style="background:#d1fae5; border:1px solid #a7f3d0;">
+                    <div class="text-xs font-bold truncate" style="color:#065f46;">{{ $schedule->shift->name }}</div>
+                    <div class="text-xs hidden md:block" style="color:#065f46;">{{ $schedule->shift->start_time }} - {{ $schedule->shift->end_time }}</div>
+                </div>
+                @else
+                <div class="text-center text-xs mt-1" style="color:var(--gray-300);">Off</div>
                 @endif
             </div>
-            
-            @if($schedule)
-            <div class="mt-1 md:mt-2 bg-green-100 border border-green-300 rounded p-1">
-                <div class="text-xs font-semibold text-green-800 truncate">{{ $schedule->shift->name }}</div>
-                <div class="text-xs text-green-700 hidden md:block">{{ $schedule->shift->start_time }} - {{ $schedule->shift->end_time }}</div>
-            </div>
-            @else
-            <div class="mt-1 md:mt-2 text-center text-gray-400 text-xs">
-                Off
-            </div>
-            @endif
-        </div>
-        @endfor
+            @endfor
 
-        <!-- Empty cells setelah akhir bulan -->
-        @php
-            $remainingCells = 7 - (($startDay + $daysInMonth) % 7);
-            if ($remainingCells < 7) {
-                for($i = 0; $i < $remainingCells; $i++) {
-                    echo '<div class="bg-gray-100 p-1 md:p-2 rounded min-h-16 md:min-h-24"></div>';
+            @php
+                $remainingCells = 7 - (($startDay + $daysInMonth) % 7);
+                if ($remainingCells < 7) {
+                    for($i = 0; $i < $remainingCells; $i++) {
+                        echo '<div class="rounded min-h-16 md:min-h-24" style="background:var(--cream-200);"></div>';
+                    }
                 }
-            }
-        @endphp
-    </div>
+            @endphp
+        </div>
 
-    <div class="mt-4 md:mt-6 bg-blue-50 border border-blue-200 rounded p-3 md:p-4">
-        <h3 class="font-semibold mb-2 text-sm md:text-base">Legend:</h3>
-        <div class="grid grid-cols-2 gap-2 text-xs md:text-sm">
-            <div class="flex items-center gap-2">
-                <div class="w-4 h-4 bg-blue-500 border-2 border-blue-600 rounded"></div>
-                <span>Today</span>
-            </div>
-            <div class="flex items-center gap-2">
-                <div class="w-4 h-4 bg-green-100 border border-green-300 rounded"></div>
-                <span>Scheduled</span>
-            </div>
-            <div class="flex items-center gap-2">
-                <div class="w-4 h-4 bg-gray-50 border border-gray-200 rounded"></div>
-                <span>Past Days</span>
-            </div>
-            <div class="flex items-center gap-2">
-                <div class="w-4 h-4 bg-white border border-gray-200 rounded"></div>
-                <span>Day Off</span>
+        <!-- Legend -->
+        <div class="mt-4 p-3 rounded-lg" style="background:rgba(201,168,76,0.06); border:1px solid var(--cream-200);">
+            <div class="text-xs font-bold mb-2" style="color:var(--gray-500); letter-spacing:0.08em; text-transform:uppercase;">Legend</div>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+                <div class="flex items-center gap-2">
+                    <div class="w-4 h-4 rounded" style="background:rgba(201,168,76,0.08); border:2px solid var(--brown-300);"></div>
+                    <span style="color:var(--gray-500);">Today</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-4 h-4 rounded" style="background:#d1fae5; border:1px solid #a7f3d0;"></div>
+                    <span style="color:var(--gray-500);">Scheduled</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-4 h-4 rounded" style="background:var(--cream-200);"></div>
+                    <span style="color:var(--gray-500);">Past / Off</span>
+                </div>
             </div>
         </div>
     </div>

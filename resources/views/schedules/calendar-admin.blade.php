@@ -1,209 +1,157 @@
 @extends('layouts.app')
-
 @section('title', 'Manage Work Schedule')
-
 @section('content')
-<div class="bg-white rounded-lg shadow p-4 md:p-6">
-    <!-- Success/Error Messages -->
-    @if(session('success'))
-    <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
-        {{ session('success') }}
-    </div>
-    @endif
-    
-    @if(session('error'))
-    <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-        {{ session('error') }}
-    </div>
-    @endif
-
-    @if($errors->any())
-    <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-        <ul class="list-disc list-inside">
-            @foreach($errors->all() as $error)
-            <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-    @endif
-
-    <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-4 md:mb-6 gap-3">
-        <h1 class="text-xl md:text-2xl font-bold">Manage Work Schedule - {{ $date->format('F Y') }}</h1>
-        
-        <div class="flex gap-2 overflow-x-auto">
-            <a href="{{ route('schedules.calendar', ['month' => $date->copy()->subMonth()->format('Y-m'), 'user_id' => $selectedUserId]) }}" 
-               class="bg-gray-300 text-gray-700 px-3 py-2 rounded hover:bg-gray-400 text-sm whitespace-nowrap">
-                ← Previous
-            </a>
-            <a href="{{ route('schedules.calendar', ['month' => now()->format('Y-m'), 'user_id' => $selectedUserId]) }}" 
-               class="bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 text-sm whitespace-nowrap">
-                This Month
-            </a>
-            <a href="{{ route('schedules.calendar', ['month' => $date->copy()->addMonth()->format('Y-m'), 'user_id' => $selectedUserId]) }}" 
-               class="bg-gray-300 text-gray-700 px-3 py-2 rounded hover:bg-gray-400 text-sm whitespace-nowrap">
-                Next →
-            </a>
+<div class="gh-card" style="padding:0; overflow:hidden;">
+    <div class="gh-card-header flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+        <h1 class="font-header" style="letter-spacing:0.1em;">Manage Schedule — {{ $date->format('F Y') }}</h1>
+        <div class="flex gap-2">
+            <a href="{{ route('schedules.calendar', ['month' => $date->copy()->subMonth()->format('Y-m'), 'user_id' => $selectedUserId]) }}"
+               class="btn btn-secondary text-xs px-3 py-1.5">← Prev</a>
+            <a href="{{ route('schedules.calendar', ['month' => now()->format('Y-m'), 'user_id' => $selectedUserId]) }}"
+               class="btn btn-gold text-xs px-3 py-1.5">This Month</a>
+            <a href="{{ route('schedules.calendar', ['month' => $date->copy()->addMonth()->format('Y-m'), 'user_id' => $selectedUserId]) }}"
+               class="btn btn-secondary text-xs px-3 py-1.5">Next →</a>
         </div>
     </div>
 
-    <!-- Pilih User -->
-    <div class="mb-4 md:mb-6 bg-gray-50 p-3 md:p-4 rounded">
-        <form method="GET" class="flex flex-col md:flex-row gap-3 md:gap-4 md:items-end">
+    <div class="p-4">
+        <!-- Select User -->
+        <div class="mb-4 p-3 rounded-lg" style="background:var(--cream-100); border:1px solid var(--cream-200);">
+            <form method="GET">
+                <input type="hidden" name="month" value="{{ $date->format('Y-m') }}">
+                <div class="flex flex-col sm:flex-row gap-3 sm:items-end">
+                    <div class="flex-1">
+                        <label class="gh-label">Select User</label>
+                        <select name="user_id" class="gh-select" onchange="this.form.submit()">
+                            @foreach($users as $user)
+                            <option value="{{ $user->id }}" {{ $selectedUserId == $user->id ? 'selected' : '' }}>
+                                {{ $user->name }} — {{ $user->user_type === 'magang' ? 'Intern' : 'Daily Worker' }}
+                            </option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <form method="POST" action="{{ route('schedules.bulk-store') }}" id="scheduleForm">
+            @csrf
+            <input type="hidden" name="user_id" value="{{ $selectedUserId }}">
             <input type="hidden" name="month" value="{{ $date->format('Y-m') }}">
-            <div class="flex-1">
-                <label class="block text-gray-700 mb-2 font-semibold text-sm md:text-base">Select User:</label>
-                <select name="user_id" class="w-full px-3 md:px-4 py-2 border rounded-lg text-sm md:text-base" onchange="this.form.submit()">
-                    @foreach($users as $user)
-                    <option value="{{ $user->id }}" {{ $selectedUserId == $user->id ? 'selected' : '' }}>
-                        {{ $user->name }} - {{ $user->user_type === 'magang' ? 'Intern' : 'Daily Worker' }}
-                    </option>
-                    @endforeach
-                </select>
+
+            <!-- Quick Actions -->
+            <div class="mb-4 p-3 rounded-lg flex flex-wrap gap-2 items-center" style="background:rgba(201,168,76,0.06); border:1px solid var(--cream-200);">
+                <span class="text-xs font-bold" style="color:var(--gray-500); letter-spacing:0.06em; text-transform:uppercase;">Quick Setup:</span>
+                @foreach($shifts as $shift)
+                <button type="button" onclick="applyShiftToAll('{{ $shift->id }}')"
+                    class="btn btn-primary text-xs px-3 py-1.5">{{ $shift->name }} All</button>
+                @endforeach
+                <button type="button" onclick="applyShiftToWeekdays()"
+                    class="btn btn-gold text-xs px-3 py-1.5">Mon–Fri</button>
+                <button type="button" onclick="clearAll()"
+                    class="btn btn-danger text-xs px-3 py-1.5" style="background:#dc2626; color:#fff;">Clear All</button>
+            </div>
+
+            <div class="grid grid-cols-7 gap-1 md:gap-2">
+                @foreach(['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as $day)
+                <div class="text-center py-2 rounded text-xs font-bold" style="background:linear-gradient(135deg,var(--brown-900),var(--brown-600)); color:var(--cream-50); letter-spacing:0.06em;">
+                    {{ $day }}
+                </div>
+                @endforeach
+
+                @php
+                    $startOfMonth = $date->copy()->startOfMonth();
+                    $startDay = $startOfMonth->dayOfWeek;
+                    $daysInMonth = $startOfMonth->daysInMonth;
+                    $today = now()->format('Y-m-d');
+                @endphp
+
+                @for($i = 0; $i < $startDay; $i++)
+                <div class="rounded min-h-20 md:min-h-32" style="background:var(--cream-200);"></div>
+                @endfor
+
+                @for($day = 1; $day <= $daysInMonth; $day++)
+                @php
+                    $currentDate = $date->copy()->day($day);
+                    $dateKey = $currentDate->format('Y-m-d');
+                    $schedule = $schedules->get($dateKey);
+                    $isToday = $dateKey === $today;
+                    $dayOfWeek = $currentDate->dayOfWeek;
+                @endphp
+                <div class="p-1 md:p-2 rounded min-h-20 md:min-h-32"
+                    style="border:2px solid {{ $isToday ? 'var(--brown-300)' : 'var(--cream-200)' }};
+                           background:{{ $isToday ? 'rgba(201,168,76,0.08)' : 'var(--cream-50)' }};"
+                    data-date="{{ $dateKey }}" data-day="{{ $dayOfWeek }}">
+                    <div class="text-xs md:text-sm font-bold mb-1"
+                        style="color:{{ $isToday ? 'var(--brown-300)' : 'var(--brown-900)' }};">
+                        {{ $day }}
+                    </div>
+                    <select name="schedules[{{ $dateKey }}][shift_id]"
+                            class="w-full px-1 py-1 rounded text-xs shift-select"
+                            style="border:1px solid var(--cream-200); background:var(--cream-50); color:var(--brown-900);"
+                            data-date="{{ $dateKey }}">
+                        <option value="">Off</option>
+                        @foreach($shifts as $shift)
+                        <option value="{{ $shift->id }}" {{ $schedule && $schedule->shift_id == $shift->id ? 'selected' : '' }}>
+                            {{ $shift->name }}
+                        </option>
+                        @endforeach
+                    </select>
+                    <input type="hidden" name="schedules[{{ $dateKey }}][date]" value="{{ $dateKey }}">
+                    @if($schedule)
+                    <div class="mt-1 text-xs hidden md:block" style="color:var(--gray-300);">
+                        {{ $schedule->shift->start_time }} - {{ $schedule->shift->end_time }}
+                    </div>
+                    @endif
+                </div>
+                @endfor
+
+                @php
+                    $remainingCells = 7 - (($startDay + $daysInMonth) % 7);
+                    if ($remainingCells < 7) {
+                        for($i = 0; $i < $remainingCells; $i++) {
+                            echo '<div class="rounded min-h-20 md:min-h-32" style="background:var(--cream-200);"></div>';
+                        }
+                    }
+                @endphp
+            </div>
+
+            <div class="mt-5 flex flex-col sm:flex-row gap-3">
+                <button type="submit" class="btn btn-success flex-1 justify-center py-3">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+                    </svg>
+                    Save All Schedules
+                </button>
+                <a href="{{ route('schedules.index') }}" class="btn btn-secondary flex-1 justify-center py-3">Back</a>
             </div>
         </form>
     </div>
-
-    <form method="POST" action="{{ route('schedules.bulk-store') }}" id="scheduleForm">
-        @csrf
-        <input type="hidden" name="user_id" value="{{ $selectedUserId }}">
-        <input type="hidden" name="month" value="{{ $date->format('Y-m') }}">
-
-        <!-- Quick Actions -->
-        <div class="mb-4 bg-blue-50 border border-blue-200 rounded p-3 md:p-4">
-            <div class="flex gap-2 items-center flex-wrap">
-                <span class="font-semibold text-sm md:text-base">Quick Setup:</span>
-                @foreach($shifts as $shift)
-                <button type="button" onclick="applyShiftToAll('{{ $shift->id }}')" 
-                    class="bg-blue-600 text-white px-2 md:px-3 py-1 rounded text-xs md:text-sm hover:bg-blue-700 whitespace-nowrap">
-                    All {{ $shift->name }}
-                </button>
-                @endforeach
-                <button type="button" onclick="applyShiftToWeekdays()" 
-                    class="bg-green-600 text-white px-2 md:px-3 py-1 rounded text-xs md:text-sm hover:bg-green-700 whitespace-nowrap">
-                    Mon-Fri
-                </button>
-                <button type="button" onclick="clearAll()" 
-                    class="bg-red-600 text-white px-2 md:px-3 py-1 rounded text-xs md:text-sm hover:bg-red-700 whitespace-nowrap">
-                    Clear All
-                </button>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-7 gap-1 md:gap-2">
-            <!-- Header Hari -->
-            @foreach(['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as $day)
-            <div class="bg-blue-600 text-white text-center font-semibold py-2 rounded text-xs md:text-base">
-                {{ $day }}
-            </div>
-            @endforeach
-
-            <!-- Tanggal -->
-            @php
-                $startOfMonth = $date->copy()->startOfMonth();
-                $endOfMonth = $date->copy()->endOfMonth();
-                $startDay = $startOfMonth->dayOfWeek;
-                $daysInMonth = $startOfMonth->daysInMonth;
-                $today = now()->format('Y-m-d');
-            @endphp
-
-            <!-- Empty cells sebelum tanggal 1 -->
-            @for($i = 0; $i < $startDay; $i++)
-            <div class="bg-gray-100 p-1 md:p-2 rounded min-h-20 md:min-h-32"></div>
-            @endfor
-
-            <!-- Tanggal dalam bulan -->
-            @for($day = 1; $day <= $daysInMonth; $day++)
-            @php
-                $currentDate = $date->copy()->day($day);
-                $dateKey = $currentDate->format('Y-m-d');
-                $schedule = $schedules->get($dateKey);
-                $isToday = $dateKey === $today;
-                $dayOfWeek = $currentDate->dayOfWeek;
-            @endphp
-            <div class="border-2 {{ $isToday ? 'border-blue-500 bg-blue-50' : 'border-gray-200' }} p-1 md:p-2 rounded min-h-20 md:min-h-32" 
-                 data-date="{{ $dateKey }}" data-day="{{ $dayOfWeek }}">
-                <div class="font-semibold {{ $isToday ? 'text-blue-600' : 'text-gray-700' }} mb-1 md:mb-2 text-xs md:text-base">
-                    {{ $day }}
-                </div>
-                
-                <select name="schedules[{{ $dateKey }}][shift_id]" 
-                        class="w-full px-1 md:px-2 py-1 border rounded text-xs md:text-sm shift-select"
-                        data-date="{{ $dateKey }}">
-                    <option value="">Off</option>
-                    @foreach($shifts as $shift)
-                    <option value="{{ $shift->id }}" {{ $schedule && $schedule->shift_id == $shift->id ? 'selected' : '' }}>
-                        {{ $shift->name }}
-                    </option>
-                    @endforeach
-                </select>
-                
-                <input type="hidden" name="schedules[{{ $dateKey }}][date]" value="{{ $dateKey }}">
-                
-                @if($schedule)
-                <div class="mt-1 text-xs text-gray-600 hidden md:block">
-                    {{ $schedule->shift->start_time }} - {{ $schedule->shift->end_time }}
-                </div>
-                @endif
-            </div>
-            @endfor
-
-            <!-- Empty cells setelah akhir bulan -->
-            @php
-                $remainingCells = 7 - (($startDay + $daysInMonth) % 7);
-                if ($remainingCells < 7) {
-                    for($i = 0; $i < $remainingCells; $i++) {
-                        echo '<div class="bg-gray-100 p-1 md:p-2 rounded min-h-20 md:min-h-32"></div>';
-                    }
-                }
-            @endphp
-        </div>
-
-        <div class="mt-4 md:mt-6 flex flex-col md:flex-row gap-3 md:gap-4">
-            <button type="submit" class="bg-green-600 text-white px-4 md:px-6 py-3 rounded-lg hover:bg-green-700 font-semibold text-sm md:text-base">
-                💾 Save All Schedules
-            </button>
-            <a href="{{ route('schedules.index') }}" class="bg-gray-300 text-gray-700 px-4 md:px-6 py-3 rounded-lg hover:bg-gray-400 text-center text-sm md:text-base">
-                Back
-            </a>
-        </div>
-    </form>
 </div>
 
 <script>
 function applyShiftToAll(shiftId) {
     if (!confirm('Set all days with this shift?')) return;
-    
-    document.querySelectorAll('.shift-select').forEach(select => {
-        select.value = shiftId;
-    });
+    document.querySelectorAll('.shift-select').forEach(s => s.value = shiftId);
 }
-
 function applyShiftToWeekdays() {
-    const shiftId = prompt('Enter shift ID for Monday-Friday (see dropdown):');
+    const shiftId = prompt('Enter shift ID for Monday-Friday:');
     if (!shiftId) return;
-    
     document.querySelectorAll('[data-day]').forEach(cell => {
         const day = parseInt(cell.dataset.day);
-        if (day >= 1 && day <= 5) { // Monday-Friday
-            const select = cell.querySelector('.shift-select');
-            if (select) select.value = shiftId;
+        if (day >= 1 && day <= 5) {
+            const sel = cell.querySelector('.shift-select');
+            if (sel) sel.value = shiftId;
         }
     });
 }
-
 function clearAll() {
     if (!confirm('Clear all schedules?')) return;
-    
-    document.querySelectorAll('.shift-select').forEach(select => {
-        select.value = '';
-    });
+    document.querySelectorAll('.shift-select').forEach(s => s.value = '');
 }
-
-// Auto-submit prevention
-document.getElementById('scheduleForm').addEventListener('submit', function(e) {
-    const button = this.querySelector('button[type="submit"]');
-    button.disabled = true;
-    button.textContent = 'Saving...';
+document.getElementById('scheduleForm').addEventListener('submit', function() {
+    const btn = this.querySelector('button[type="submit"]');
+    btn.disabled = true; btn.textContent = 'Saving...';
 });
 </script>
 @endsection

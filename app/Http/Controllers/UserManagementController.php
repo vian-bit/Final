@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Department;
 use App\Models\User;
+use App\Models\UserType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -28,8 +29,9 @@ class UserManagementController extends Controller
     {
         $user = Auth::user();
         $departments = $user->isSuperuser() ? Department::all() : Department::where('id', $user->department_id)->get();
-        
-        return view('users.create', compact('departments'));
+        $userTypes = UserType::where('is_active', true)->get();
+
+        return view('users.create', compact('departments', 'userTypes'));
     }
 
     public function store(Request $request)
@@ -43,7 +45,7 @@ class UserManagementController extends Controller
             'password' => 'required|min:8',
             'role' => 'required|in:admin,user',
             'department_id' => 'required|exists:departments,id',
-            'user_type' => 'required_if:role,user|in:magang,daily_worker,admin',
+            'user_type' => 'required_if:role,user|nullable|exists:user_types,code',
             'start_date' => 'required_if:role,user|date',
         ]);
 
@@ -66,8 +68,9 @@ class UserManagementController extends Controller
     {
         $authUser = Auth::user();
         $departments = $authUser->isSuperuser() ? Department::all() : Department::where('id', $authUser->department_id)->get();
-        
-        return view('users.edit', compact('user', 'departments'));
+        $userTypes = UserType::where('is_active', true)->get();
+
+        return view('users.edit', compact('user', 'departments', 'userTypes'));
     }
 
     public function update(Request $request, User $user)
@@ -79,7 +82,7 @@ class UserManagementController extends Controller
             'wa_lid' => 'nullable|string|max:50',
             'password' => 'nullable|min:8',
             'department_id' => 'required|exists:departments,id',
-            'user_type' => 'required_if:role,user|in:magang,daily_worker,admin',
+            'user_type' => 'required_if:role,user|nullable|exists:user_types,code',
             'start_date' => 'required_if:role,user|date',
             'is_active' => 'boolean',
         ]);

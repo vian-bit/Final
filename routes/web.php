@@ -7,6 +7,7 @@ use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\ShiftController;
 use App\Http\Controllers\UserManagementController;
+use App\Http\Controllers\UserTypeController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn() => redirect('/login'));
@@ -56,6 +57,11 @@ Route::middleware(['auth'])->group(function () {
     // Superuser only
     Route::middleware(['role:superuser'])->group(function () {
         Route::resource('departments', DepartmentController::class);
+    });
+
+    // Superuser & Admin
+    Route::middleware(['role:superuser,admin'])->group(function () {
+        Route::resource('user-types', UserTypeController::class);
     });
 
     // Semua user login

@@ -15,23 +15,29 @@ class AttendanceController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        
+
+        // Build user list for filter dropdown (admin/superuser only)
+        $filterUsers = collect();
+        if ($user->isSuperuser() || $user->isAdmin()) {
+            $filterUsers = User::where('role', 'user')
+                ->when($user->isAdmin(), fn($q) => $q->where('department_id', $user->department_id))
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get(['id', 'name']);
+        }
+
         $attendances = Attendance::with(['user', 'schedule.shift'])
             ->when($user->isAdmin(), function($q) use ($user) {
-                $q->whereHas('user', function($query) use ($user) {
-                    $query->where('department_id', $user->department_id);
-                });
+                $q->whereHas('user', fn($query) => $query->where('department_id', $user->department_id));
             })
-            ->when($user->isUser(), function($q) use ($user) {
-                $q->where('user_id', $user->id);
-            })
-            ->when($request->date, function($q) use ($request) {
-                $q->whereDate('date', $request->date);
-            })
+            ->when($user->isUser(), fn($q) => $q->where('user_id', $user->id))
+            ->when($request->date, fn($q) => $q->whereDate('date', $request->date))
+            ->when($request->user_id, fn($q) => $q->where('user_id', $request->user_id))
             ->orderBy('date', 'desc')
-            ->paginate(20);
+            ->paginate(20)
+            ->withQueryString();
 
-        return view('attendances.index', compact('attendances'));
+        return view('attendances.index', compact('attendances', 'filterUsers'));
     }
 
     public function checkIn(Request $request)

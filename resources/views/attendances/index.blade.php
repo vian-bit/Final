@@ -1,83 +1,91 @@
 @extends('layouts.app')
-
 @section('title', 'Attendance Data')
-
 @section('content')
-<div class="bg-white rounded-lg shadow p-4 md:p-6">
-    <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-4 md:mb-6 gap-3">
-        <h1 class="text-xl md:text-2xl font-bold">Attendance Data</h1>
+<div class="gh-card">
+    <div class="gh-card-header flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+        <h1 class="font-header" style="letter-spacing:0.1em;">Attendance Data</h1>
         @if(Auth::user()->isSuperuser() || Auth::user()->isAdmin())
-        <a href="{{ route('attendances.export') }}" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-center text-sm md:text-base">
+        <a href="{{ route('attendances.export') }}" class="btn btn-gold text-xs">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+            </svg>
             Export Report
         </a>
         @endif
     </div>
 
-    <div class="mb-4">
-        <form method="GET" class="flex flex-col md:flex-row gap-3 md:gap-4">
-            <input type="date" name="date" value="{{ request('date') }}" 
-                class="px-3 md:px-4 py-2 border rounded-lg text-sm md:text-base">
-            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm md:text-base">
+    <!-- Filters -->
+    <div class="px-6 py-4" style="border-bottom:1px solid var(--cream-200);">
+        <form method="GET" class="flex flex-wrap gap-3">
+            <input type="date" name="date" value="{{ request('date') }}" class="gh-input" style="width:auto; min-width:160px;">
+            @if(Auth::user()->isSuperuser() || Auth::user()->isAdmin())
+            <select name="user_id" class="gh-select" style="width:auto; min-width:180px;">
+                <option value="">— Semua User —</option>
+                @foreach($filterUsers as $u)
+                <option value="{{ $u->id }}" {{ request('user_id') == $u->id ? 'selected' : '' }}>{{ $u->name }}</option>
+                @endforeach
+            </select>
+            @endif
+            <button type="submit" class="btn btn-primary">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z"/>
+                </svg>
                 Filter
             </button>
-            <a href="{{ route('attendances.index') }}" class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 text-center text-sm md:text-base">
-                Reset
-            </a>
+            <a href="{{ route('attendances.index') }}" class="btn btn-secondary">Reset</a>
         </form>
     </div>
 
     <div class="overflow-x-auto">
-        <table class="min-w-full bg-white text-sm md:text-base">
-            <thead class="bg-gray-100">
-                <tr>
-                    <th class="px-2 md:px-4 py-2 text-left">Date</th>
-                    <th class="px-2 md:px-4 py-2 text-left">User</th>
-                    <th class="px-2 md:px-4 py-2 text-left hidden lg:table-cell">Shift</th>
-                    <th class="px-2 md:px-4 py-2 text-left">Check In</th>
-                    <th class="px-2 md:px-4 py-2 text-left">Check Out</th>
-                    <th class="px-2 md:px-4 py-2 text-left hidden md:table-cell">Durasi</th>
-                    <th class="px-2 md:px-4 py-2 text-left">Status</th>
-                </tr>
-            </thead>
+        <table class="gh-table">
+            <thead><tr>
+                <th>Date</th><th>User</th>
+                <th class="hidden lg:table-cell">Shift</th>
+                <th>Check In</th><th>Check Out</th>
+                <th class="hidden md:table-cell">Duration</th>
+                <th>Status</th>
+            </tr></thead>
             <tbody>
                 @forelse($attendances as $attendance)
-                <tr class="border-b">
-                    <td class="px-2 md:px-4 py-2">{{ $attendance->date->format('d/m/Y') }}</td>
-                    <td class="px-2 md:px-4 py-2">{{ $attendance->user->name }}</td>
-                    <td class="px-2 md:px-4 py-2 hidden lg:table-cell">{{ $attendance->schedule->shift->name }}</td>
-                    <td class="px-2 md:px-4 py-2">{{ $attendance->check_in ?? '-' }}</td>
-                    <td class="px-2 md:px-4 py-2">{{ $attendance->check_out ?? '-' }}</td>
-                    <td class="px-2 md:px-4 py-2 hidden md:table-cell">
+                <tr>
+                    <td style="color:var(--gray-500);">{{ $attendance->date->format('d/m/Y') }}</td>
+                    <td class="font-bold" style="color:var(--brown-900);">{{ $attendance->user->name }}</td>
+                    <td class="hidden lg:table-cell" style="color:var(--gray-500);">{{ $attendance->schedule->shift->name }}</td>
+                    <td>{{ $attendance->check_in ?? '—' }}</td>
+                    <td>{{ $attendance->check_out ?? '—' }}</td>
+                    <td class="hidden md:table-cell" style="color:var(--gray-500);">
                         @if($attendance->check_in && $attendance->check_out)
                             @php
                                 $diff = \Carbon\Carbon::createFromFormat('H:i:s', $attendance->check_in)
                                     ->diff(\Carbon\Carbon::createFromFormat('H:i:s', $attendance->check_out));
                             @endphp
                             {{ $diff->h }}j {{ $diff->i }}m
-                        @else
-                            -
+                        @else —
                         @endif
                     </td>
-                    <td class="px-2 md:px-4 py-2">
-                        <span class="px-2 py-1 rounded text-xs md:text-sm
-                            @if($attendance->status == 'present') bg-green-100 text-green-800
-                            @elseif($attendance->status == 'late') bg-yellow-100 text-yellow-800
-                            @else bg-red-100 text-red-800 @endif">
+                    <td>
+                        <span class="badge
+                            @if($attendance->status == 'present') badge-success
+                            @elseif($attendance->status == 'late') badge-warning
+                            @else badge-danger @endif">
                             {{ ucfirst($attendance->status) }}
                         </span>
                     </td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="7" class="px-2 md:px-4 py-4 text-center text-gray-500">No attendance data found</td>
+                    <td colspan="7" class="text-center py-10" style="color:var(--gray-300);">
+                        <svg class="w-8 h-8 mx-auto mb-2 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                        </svg>
+                        No attendance data found
+                    </td>
                 </tr>
                 @endforelse
             </tbody>
         </table>
     </div>
 
-    <div class="mt-4">
-        {{ $attendances->links() }}
-    </div>
+    <div class="px-6 py-4">{{ $attendances->links() }}</div>
 </div>
 @endsection

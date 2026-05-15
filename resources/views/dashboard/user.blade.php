@@ -1,251 +1,215 @@
 @extends('layouts.app')
-
-@section('title', 'Dashboard User')
-
+@section('title', 'Dashboard')
 @section('content')
-<div class="bg-white rounded-lg shadow p-4 sm:p-6">
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 gap-1">
-        <h1 class="text-xl sm:text-2xl font-bold">Dashboard - {{ Auth::user()->name }}</h1>
-        <p class="text-gray-500 text-sm">{{ \Carbon\Carbon::now('Asia/Jakarta')->translatedFormat('l, d F Y') }}</p>
-    </div>
 
-    <!-- User Info Card -->
-    <div class="flex flex-wrap gap-3 mb-5">
-        <div class="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-lg px-4 py-2">
-            <span class="text-blue-500 text-lg">🏢</span>
-            <div>
-                <p class="text-xs text-gray-500">Department</p>
-                <p class="font-semibold text-blue-800 text-sm">{{ Auth::user()->department->name ?? 'Tidak ada departemen' }}</p>
-            </div>
+<!-- User Info -->
+<div class="flex flex-wrap gap-3 mb-5">
+    <div class="gh-card flex items-center gap-3 px-4 py-3" style="padding:12px 16px;">
+        <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style="background:linear-gradient(135deg,var(--brown-400),var(--brown-600));">
+            <svg class="w-4 h-4" fill="none" stroke="var(--cream-50)" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+            </svg>
         </div>
-        <div class="flex items-center gap-2 bg-purple-50 border border-purple-200 rounded-lg px-4 py-2">
-            <span class="text-purple-500 text-lg">🪪</span>
-            <div>
-                <p class="text-xs text-gray-500">Role</p>
-                <p class="font-semibold text-purple-800 text-sm">
-                    @if(Auth::user()->user_type === 'trainee')
-                        Trainee
-                    @elseif(Auth::user()->user_type === 'daily_worker')
-                        Daily Worker
-                    @else
-                        {{ ucfirst(Auth::user()->user_type ?? '-') }}
-                    @endif
-                </p>
-            </div>
+        <div>
+            <div class="text-xs" style="color:var(--gray-300); letter-spacing:0.06em; text-transform:uppercase;">Department</div>
+            <div class="text-sm font-bold" style="color:var(--brown-900);">{{ Auth::user()->department->name ?? '—' }}</div>
         </div>
     </div>
-
-    <!-- Early Checkout Request Notifications -->
-    @if($earlyCheckoutRequest)
-        @if($earlyCheckoutRequest->status === 'pending')
-        <div class="mb-4 bg-yellow-50 border-2 border-yellow-400 rounded-lg p-4">
-            <div class="flex items-start gap-3">
-                <div class="text-2xl">⏳</div>
-                <div class="flex-1">
-                    <p class="font-semibold text-yellow-800">Early Checkout Request Pending</p>
-                    <p class="text-sm text-yellow-700 mt-1">
-                        Your request to checkout at {{ $earlyCheckoutRequest->requested_checkout_time }} is waiting for admin approval.
-                    </p>
-                    @if($earlyCheckoutRequest->reason)
-                    <p class="text-xs text-yellow-600 mt-2">
-                        <span class="font-semibold">Your reason:</span> {{ $earlyCheckoutRequest->reason }}
-                    </p>
-                    @endif
-                </div>
-            </div>
+    <div class="gh-card flex items-center gap-3 px-4 py-3" style="padding:12px 16px;">
+        <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style="background:linear-gradient(135deg,var(--brown-300),#a8832a);">
+            <svg class="w-4 h-4" fill="none" stroke="var(--brown-900)" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+            </svg>
         </div>
-        @elseif($earlyCheckoutRequest->status === 'approved')
-        <div class="mb-4 bg-green-50 border-2 border-green-400 rounded-lg p-4">
-            <div class="flex items-start gap-3">
-                <div class="text-2xl">✅</div>
-                <div class="flex-1">
-                    <p class="font-semibold text-green-800">Early Checkout Request Approved</p>
-                    <p class="text-sm text-green-700 mt-1">
-                        Your early checkout at {{ $earlyCheckoutRequest->requested_checkout_time }} has been approved by {{ $earlyCheckoutRequest->approvedBy->name }}.
-                    </p>
-                    @if($earlyCheckoutRequest->admin_notes)
-                    <p class="text-xs text-green-600 mt-2">
-                        <span class="font-semibold">Admin notes:</span> {{ $earlyCheckoutRequest->admin_notes }}
-                    </p>
-                    @endif
-                </div>
-            </div>
-        </div>
-        @elseif($earlyCheckoutRequest->status === 'rejected')
-        <div class="mb-4 bg-red-50 border-2 border-red-400 rounded-lg p-4">
-            <div class="flex items-start gap-3">
-                <div class="text-2xl">❌</div>
-                <div class="flex-1">
-                    <p class="font-semibold text-red-800">Early Checkout Request Rejected</p>
-                    <p class="text-sm text-red-700 mt-1">
-                        Your request to checkout at {{ $earlyCheckoutRequest->requested_checkout_time }} has been rejected by {{ $earlyCheckoutRequest->approvedBy->name }}.
-                    </p>
-                    <p class="text-sm text-red-700 mt-1">
-                        Please wait until your shift ends at {{ $earlyCheckoutRequest->shift_end_time }} to checkout.
-                    </p>
-                    @if($earlyCheckoutRequest->admin_notes)
-                    <p class="text-xs text-red-600 mt-2 bg-red-100 p-2 rounded">
-                        <span class="font-semibold">Reason for rejection:</span> {{ $earlyCheckoutRequest->admin_notes }}
-                    </p>
-                    @endif
-                </div>
-            </div>
-        </div>
-        @endif
-    @endif
-
-    @if($todaySchedule)
-    <div class="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 sm:p-6 mb-4 sm:mb-6">
-        <h2 class="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Today's Schedule</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-            <div>
-                <p class="text-gray-600 text-sm">Shift</p>
-                <p class="font-semibold text-lg">{{ $todaySchedule->shift->name }}</p>
-            </div>
-            <div>
-                <p class="text-gray-600 text-sm">Working Hours</p>
-                <p class="font-semibold text-lg">{{ $todaySchedule->shift->start_time }} - {{ $todaySchedule->shift->end_time }}</p>
-            </div>
-        </div>
-
-        <div class="mt-4 sm:mt-6 space-y-3">
-            @if(!$todayAttendance || !$todayAttendance->check_in)
-            <button onclick="confirmCheckIn()" 
-                class="w-full bg-green-500 text-white px-6 py-4 rounded-lg hover:bg-green-600 font-semibold text-lg shadow-lg active:scale-95 transition">
-                ✓ Check In Now
-            </button>
-            <div class="text-center text-gray-600">
-                <span id="current-time" class="font-semibold text-lg"></span>
-            </div>
-            
-            <form method="POST" action="{{ route('attendances.checkin') }}" id="checkinForm" class="hidden">
-                @csrf
-            </form>
-            @elseif(!$todayAttendance->check_out)
-            <div class="bg-green-100 border border-green-300 rounded-lg p-4 mb-3">
-                <p class="text-green-800 font-semibold text-center">
-                    ✓ Checked In: {{ $todayAttendance->check_in }}
-                </p>
-            </div>
-
-            @if($earlyCheckoutRequest && $earlyCheckoutRequest->status === 'pending')
-            {{-- Tombol disabled saat request pending --}}
-            <button disabled
-                class="w-full bg-yellow-400 text-yellow-900 px-6 py-4 rounded-lg font-semibold text-lg shadow cursor-not-allowed opacity-80">
-                ⏳ On Request — Menunggu Persetujuan Admin
-            </button>
-            <p class="text-center text-xs text-yellow-700 mt-1">
-                Request checkout jam {{ $earlyCheckoutRequest->requested_checkout_time }} sedang diproses
-            </p>
-            @else
-            <button onclick="showCheckOutModal()" 
-                class="w-full bg-red-500 text-white px-6 py-4 rounded-lg hover:bg-red-600 font-semibold text-lg shadow-lg active:scale-95 transition">
-                ✓ Check Out Now
-            </button>
-            @endif
-
-            <div class="text-center text-gray-600 mt-2">
-                <span class="text-sm text-gray-500">Working Time: </span><span id="work-duration" class="font-semibold text-lg"></span>
-            </div>
-            
-            <form method="POST" action="{{ route('attendances.checkout') }}" id="checkoutForm" class="hidden">
-                @csrf
-                <input type="hidden" name="reason" id="checkoutReason">
-            </form>
-            @else
-            <div class="bg-gray-100 border border-gray-300 rounded-lg p-4 space-y-2">
-                <p class="text-gray-700 font-semibold">✓ Check In: {{ $todayAttendance->check_in }}</p>
-                <p class="text-gray-700 font-semibold">✓ Check Out: {{ $todayAttendance->check_out }}</p>
-                <p class="text-green-600 font-semibold text-center mt-2">Attendance Complete!</p>
-            </div>
-            @endif
-        </div>
-    </div>
-    @else
-    <div class="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-4 sm:p-6 mb-4 sm:mb-6">
-        <p class="text-yellow-800 text-center font-semibold">You have no schedule today.</p>
-    </div>
-    @endif
-
-    <div class="mt-4 sm:mt-6">
-        <h2 class="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Recent Attendance History</h2>
-        <div class="overflow-x-auto -mx-4 sm:mx-0">
-            <div class="inline-block min-w-full align-middle">
-                <table class="min-w-full bg-white text-sm">
-                    <thead class="bg-gray-100">
-                        <tr>
-                            <th class="px-3 py-2 text-left">Date</th>
-                            <th class="px-3 py-2 text-left">Check In</th>
-                            <th class="px-3 py-2 text-left">Check Out</th>
-                            <th class="px-3 py-2 text-left">Durasi</th>
-                            <th class="px-3 py-2 text-left">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($recentAttendances as $attendance)
-                        <tr class="border-b">
-                            <td class="px-3 py-2 whitespace-nowrap">{{ $attendance->date->format('d/m/Y') }}</td>
-                            <td class="px-3 py-2">{{ $attendance->check_in ?? '-' }}</td>
-                            <td class="px-3 py-2">{{ $attendance->check_out ?? '-' }}</td>
-                            <td class="px-3 py-2">
-                                @if($attendance->check_in && $attendance->check_out)
-                                    @php
-                                        $diff = \Carbon\Carbon::createFromFormat('H:i:s', $attendance->check_in)
-                                            ->diff(\Carbon\Carbon::createFromFormat('H:i:s', $attendance->check_out));
-                                    @endphp
-                                    {{ $diff->h }}j {{ $diff->i }}m
-                                @else
-                                    -
-                                @endif
-                            </td>
-                            <td class="px-3 py-2">
-                                <span class="px-2 py-1 rounded text-xs font-semibold
-                                    @if($attendance->status == 'present') bg-green-100 text-green-800
-                                    @elseif($attendance->status == 'late') bg-yellow-100 text-yellow-800
-                                    @else bg-red-100 text-red-800 @endif">
-                                    {{ ucfirst($attendance->status) }}
-                                </span>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="5" class="px-3 py-4 text-center text-gray-500">No attendance history yet</td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+        <div>
+            <div class="text-xs" style="color:var(--gray-300); letter-spacing:0.06em; text-transform:uppercase;">Type</div>
+            <div class="text-sm font-bold" style="color:var(--brown-900);">
+                @if(Auth::user()->user_type === 'trainee') Trainee
+                @elseif(Auth::user()->user_type === 'daily_worker') Daily Worker
+                @else {{ ucfirst(Auth::user()->user_type ?? '—') }}
+                @endif
             </div>
         </div>
     </div>
 </div>
 
-<!-- Modal for Early Checkout -->
-<div id="checkoutModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-lg p-6 max-w-md w-full">
-        <h3 class="text-xl font-bold mb-4">Check Out Confirmation</h3>
-        
-        <div id="earlyCheckoutWarning" class="hidden bg-yellow-50 border border-yellow-300 rounded p-3 mb-4">
-            <p class="text-yellow-800 text-sm">
-                ⚠️ You are checking out before shift end time. This requires admin approval.
-            </p>
+<!-- Early Checkout Notifications -->
+@if($earlyCheckoutRequest)
+    @if($earlyCheckoutRequest->status === 'pending')
+    <div class="alert alert-info mb-4 flex items-start gap-3">
+        <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <div>
+            <div class="font-bold text-sm">Early Checkout Request Pending</div>
+            <div class="text-xs mt-0.5">Request checkout jam {{ $earlyCheckoutRequest->requested_checkout_time }} sedang menunggu persetujuan admin.</div>
+        </div>
+    </div>
+    @elseif($earlyCheckoutRequest->status === 'approved')
+    <div class="alert alert-success mb-4 flex items-start gap-3">
+        <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <div>
+            <div class="font-bold text-sm">Early Checkout Approved</div>
+            <div class="text-xs mt-0.5">Disetujui oleh {{ $earlyCheckoutRequest->approvedBy->name }}.
+                @if($earlyCheckoutRequest->admin_notes) "{{ $earlyCheckoutRequest->admin_notes }}"@endif
+            </div>
+        </div>
+    </div>
+    @elseif($earlyCheckoutRequest->status === 'rejected')
+    <div class="alert alert-error mb-4 flex items-start gap-3">
+        <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <div>
+            <div class="font-bold text-sm">Early Checkout Rejected</div>
+            <div class="text-xs mt-0.5">Ditolak oleh {{ $earlyCheckoutRequest->approvedBy->name }}.
+                @if($earlyCheckoutRequest->admin_notes) Alasan: "{{ $earlyCheckoutRequest->admin_notes }}"@endif
+            </div>
+        </div>
+    </div>
+    @endif
+@endif
+
+<!-- Today's Schedule & Attendance -->
+@if($todaySchedule)
+<div class="gh-card mb-5" style="padding:0; overflow:hidden;">
+    <div class="gh-card-header">
+        <h2 class="font-header" style="letter-spacing:0.1em;">Today's Schedule</h2>
+    </div>
+    <div class="p-5">
+        <div class="grid grid-cols-2 gap-4 mb-5">
+            <div>
+                <div class="text-xs font-bold mb-1" style="color:var(--gray-300); letter-spacing:0.08em; text-transform:uppercase;">Shift</div>
+                <div class="font-bold" style="color:var(--brown-900);">{{ $todaySchedule->shift->name }}</div>
+            </div>
+            <div>
+                <div class="text-xs font-bold mb-1" style="color:var(--gray-300); letter-spacing:0.08em; text-transform:uppercase;">Working Hours</div>
+                <div class="font-bold" style="color:var(--brown-900);">{{ $todaySchedule->shift->start_time }} — {{ $todaySchedule->shift->end_time }}</div>
+            </div>
         </div>
 
-        <div class="mb-4">
-            <label class="block text-gray-700 mb-2">Reason (optional for early checkout):</label>
-            <textarea id="reasonInput" rows="3" 
-                class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
-                placeholder="Enter reason if checking out early..."></textarea>
+        @if(!$todayAttendance || !$todayAttendance->check_in)
+        <button onclick="confirmCheckIn()"
+            class="btn btn-success w-full justify-center py-4 text-base" style="font-size:1rem;">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+            </svg>
+            Check In Now
+        </button>
+        <form method="POST" action="{{ route('attendances.checkin') }}" id="checkinForm" class="hidden">@csrf</form>
+
+        @elseif(!$todayAttendance->check_out)
+        <div class="p-3 rounded-lg mb-4 flex items-center gap-2" style="background:#d1fae5; border:1px solid #a7f3d0;">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="#065f46" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <span class="text-sm font-bold" style="color:#065f46;">Checked In: {{ $todayAttendance->check_in }}</span>
         </div>
 
-        <div class="flex gap-3">
-            <button onclick="submitCheckOut()" 
-                class="flex-1 bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600">
-                Confirm Check Out
-            </button>
-            <button onclick="closeCheckOutModal()" 
-                class="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400">
-                Cancel
-            </button>
+        <div class="text-center mb-4">
+            <div class="text-xs font-bold mb-1" style="color:var(--gray-300); letter-spacing:0.08em; text-transform:uppercase;">Working Time</div>
+            <div class="text-2xl font-bold" id="work-duration" style="color:var(--brown-900); font-family:'Copperplate',serif;">00:00:00</div>
+        </div>
+
+        @if($earlyCheckoutRequest && $earlyCheckoutRequest->status === 'pending')
+        <button disabled class="btn w-full justify-center py-4" style="background:#fef9c3; color:#854d0e; cursor:not-allowed; opacity:0.8; font-size:0.9rem;">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            Menunggu Persetujuan Admin...
+        </button>
+        @else
+        <button onclick="showCheckOutModal()"
+            class="btn btn-primary w-full justify-center py-4" style="font-size:1rem;">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+            </svg>
+            Check Out Now
+        </button>
+        @endif
+        <form method="POST" action="{{ route('attendances.checkout') }}" id="checkoutForm" class="hidden">
+            @csrf
+            <input type="hidden" name="reason" id="checkoutReason">
+        </form>
+
+        @else
+        <div class="p-4 rounded-lg text-center" style="background:var(--cream-100); border:1px solid var(--cream-200);">
+            <div class="text-sm mb-1" style="color:var(--gray-500);">Check In: <span class="font-bold" style="color:var(--brown-900);">{{ $todayAttendance->check_in }}</span></div>
+            <div class="text-sm mb-3" style="color:var(--gray-500);">Check Out: <span class="font-bold" style="color:var(--brown-900);">{{ $todayAttendance->check_out }}</span></div>
+            <span class="badge badge-success">Attendance Complete</span>
+        </div>
+        @endif
+    </div>
+</div>
+@else
+<div class="gh-card mb-5 text-center py-8" style="color:var(--gray-300);">
+    <svg class="w-10 h-10 mx-auto mb-2 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+    </svg>
+    <p class="text-sm font-bold">No schedule today</p>
+</div>
+@endif
+
+<!-- Recent Attendance -->
+<div class="gh-card" style="padding:0; overflow:hidden;">
+    <div class="gh-card-header">
+        <h2 class="font-header" style="letter-spacing:0.1em;">Recent Attendance</h2>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="gh-table">
+            <thead><tr>
+                <th>Date</th><th>Check In</th><th>Check Out</th><th>Durasi</th><th>Status</th>
+            </tr></thead>
+            <tbody>
+                @forelse($recentAttendances as $attendance)
+                <tr>
+                    <td style="color:var(--gray-500);">{{ $attendance->date->format('d/m/Y') }}</td>
+                    <td>{{ $attendance->check_in ?? '—' }}</td>
+                    <td>{{ $attendance->check_out ?? '—' }}</td>
+                    <td style="color:var(--gray-500);">
+                        @if($attendance->check_in && $attendance->check_out)
+                            @php $diff = \Carbon\Carbon::createFromFormat('H:i:s', $attendance->check_in)->diff(\Carbon\Carbon::createFromFormat('H:i:s', $attendance->check_out)); @endphp
+                            {{ $diff->h }}j {{ $diff->i }}m
+                        @else —
+                        @endif
+                    </td>
+                    <td>
+                        <span class="badge
+                            @if($attendance->status == 'present') badge-success
+                            @elseif($attendance->status == 'late') badge-warning
+                            @else badge-danger @endif">
+                            {{ ucfirst($attendance->status) }}
+                        </span>
+                    </td>
+                </tr>
+                @empty
+                <tr><td colspan="5" class="text-center py-8" style="color:var(--gray-300);">No attendance history yet</td></tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Check Out Modal -->
+<div id="checkoutModal" class="fixed inset-0 hidden items-center justify-center z-50 p-4" style="background:rgba(58,42,26,0.6);">
+    <div class="gh-card w-full max-w-md">
+        <div class="gh-card-header">
+            <h3 class="font-header" style="letter-spacing:0.1em;">Check Out Confirmation</h3>
+        </div>
+        <div class="gh-card-body">
+            <div id="earlyCheckoutWarning" class="hidden alert alert-info mb-4">
+                Anda checkout sebelum jam shift berakhir. Ini memerlukan persetujuan admin.
+            </div>
+            <div class="mb-5">
+                <label class="gh-label">Reason (optional)</label>
+                <textarea id="reasonInput" rows="3" class="gh-textarea" placeholder="Masukkan alasan jika checkout lebih awal..."></textarea>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="submitCheckOut()" class="btn btn-primary flex-1 justify-center">Confirm Check Out</button>
+                <button onclick="closeCheckOutModal()" class="btn btn-secondary flex-1 justify-center">Cancel</button>
+            </div>
         </div>
     </div>
 </div>
@@ -256,57 +220,38 @@ const checkInTimestamp = {{ \Carbon\Carbon::parse($todayAttendance->date->format
 @endif
 
 function updateTime() {
-    const durationElement = document.getElementById('work-duration');
-    if (durationElement && typeof checkInTimestamp !== 'undefined') {
-        const nowSec = Math.floor(Date.now() / 1000);
-        const diffSec = Math.max(0, nowSec - checkInTimestamp);
-        const h = String(Math.floor(diffSec / 3600)).padStart(2, '0');
-        const m = String(Math.floor((diffSec % 3600) / 60)).padStart(2, '0');
-        const s = String(diffSec % 60).padStart(2, '0');
-        durationElement.textContent = `${h}:${m}:${s}`;
+    const el = document.getElementById('work-duration');
+    if (el && typeof checkInTimestamp !== 'undefined') {
+        const diff = Math.max(0, Math.floor(Date.now() / 1000) - checkInTimestamp);
+        const h = String(Math.floor(diff / 3600)).padStart(2, '0');
+        const m = String(Math.floor((diff % 3600) / 60)).padStart(2, '0');
+        const s = String(diff % 60).padStart(2, '0');
+        el.textContent = `${h}:${m}:${s}`;
     }
 }
-
 function confirmCheckIn() {
-    if (confirm('Check in now?')) {
-        document.getElementById('checkinForm').submit();
-    }
+    if (confirm('Check in sekarang?')) document.getElementById('checkinForm').submit();
 }
-
 function showCheckOutModal() {
-    const modal = document.getElementById('checkoutModal');
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
-    
-    // Check if early checkout
+    document.getElementById('checkoutModal').classList.remove('hidden');
+    document.getElementById('checkoutModal').classList.add('flex');
     @if($todaySchedule)
     const now = new Date();
-    const currentTime = now.getHours() * 60 + now.getMinutes();
-    const shiftEndTime = '{{ $todaySchedule->shift->end_time }}';
-    const [endHour, endMinute] = shiftEndTime.split(':').map(Number);
-    const shiftEndMinutes = endHour * 60 + endMinute;
-    
-    if (currentTime < shiftEndMinutes) {
-        document.getElementById('earlyCheckoutWarning').classList.remove('hidden');
-    }
+    const cur = now.getHours() * 60 + now.getMinutes();
+    const [eh, em] = '{{ $todaySchedule->shift->end_time }}'.split(':').map(Number);
+    if (cur < eh * 60 + em) document.getElementById('earlyCheckoutWarning').classList.remove('hidden');
     @endif
 }
-
 function closeCheckOutModal() {
-    const modal = document.getElementById('checkoutModal');
-    modal.classList.add('hidden');
-    modal.classList.remove('flex');
+    document.getElementById('checkoutModal').classList.add('hidden');
+    document.getElementById('checkoutModal').classList.remove('flex');
     document.getElementById('reasonInput').value = '';
     document.getElementById('earlyCheckoutWarning').classList.add('hidden');
 }
-
 function submitCheckOut() {
-    const reason = document.getElementById('reasonInput').value;
-    document.getElementById('checkoutReason').value = reason;
+    document.getElementById('checkoutReason').value = document.getElementById('reasonInput').value;
     document.getElementById('checkoutForm').submit();
 }
-
-// Update every second
 setInterval(updateTime, 1000);
 updateTime();
 </script>
