@@ -110,37 +110,25 @@ class WhatsAppController extends Controller
             $user->update(['wa_lid' => $rawId]);
         }
 
-        // Jika user biasa (bukan admin/superuser), hanya proses perintah link
-        // dan balas dengan info — tidak bisa akses perintah admin
-        if ($user && $user->isUser()) {
-            if (str_starts_with($textL, 'link ')) {
-                return response()->json([
-                    'reply' => "✅ Nomor kamu sudah terdaftar, *{$user->name}*!\nKamu akan menerima notifikasi reminder shift otomatis. 😊"
-                ]);
-            }
-            // User biasa tidak dapat akses perintah bot — abaikan
-            return response()->json(['reply' => null]);
-        }
-
-        // Nomor tidak terdaftar — coba alur link via perintah "link <email>"
+        // Nomor tidak terdaftar — hanya proses perintah "link <email>", selain itu abaikan
         if (!$user) {
             \Illuminate\Support\Facades\Log::info("WA webhook: unregistered {$from}, text: {$textL}");
 
-            // Jika pesan adalah "link <email>", coba daftarkan wa_lid untuk SEMUA role
             if (str_starts_with($textL, 'link ')) {
-                $email = trim(substr($textL, 5));
+                $email     = trim(substr($textL, 5));
                 $candidate = User::where('email', $email)
                     ->where('is_active', true)
                     ->first();
 
                 if ($candidate) {
+                    // Simpan wa_lid
                     $candidate->update(['wa_lid' => $rawId]);
-                    // Juga update phone jika belum ada dan bisa di-parse
+                    // Simpan phone jika belum ada
                     if (empty($candidate->phone) && !$isLid) {
                         $candidate->update(['phone' => $phone]);
                     }
                     return response()->json([
-                        'reply' => "✅ Berhasil!\n\nHalo *{$candidate->name}*, nomor kamu sudah terhubung.\nKamu akan menerima notifikasi reminder shift otomatis. 😊"
+                        'reply' => "✅ Berhasil!\n\nHalo *{$candidate->name}*, nomor kamu sudah terhubung ke sistem absensi.\nKamu akan menerima notifikasi reminder shift otomatis. 😊"
                     ]);
                 }
 
@@ -149,17 +137,25 @@ class WhatsAppController extends Controller
                 ]);
             }
 
-            // Pesan lain dari nomor tidak terdaftar — beri petunjuk
+            // Pesan lain dari nomor tidak terdaftar — abaikan
+            return response()->json(['reply' => null]);
+        }
+
+        // Perintah "link" dari user yang sudah ditemukan via phone tapi wa_lid belum tersimpan
+        if (str_starts_with($textL, 'link ')) {
+            // Update wa_lid jika belum ada
+            if ($isLid && empty($user->wa_lid)) {
+                $user->update(['wa_lid' => $rawId]);
+            }
+            $extra = $user->isUser() ? "\nKamu akan menerima notifikasi reminder shift otomatis. 😊" : "\nKetik *help* untuk melihat perintah.";
             return response()->json([
-                'reply' => "👋 Halo!\n\nUntuk menghubungkan nomor WA kamu ke sistem absensi, ketik:\n\n*link email@grandhika.com*\n\n_Gunakan email yang terdaftar di sistem._"
+                'reply' => "✅ Nomor kamu sudah terhubung, *{$user->name}*!{$extra}"
             ]);
         }
 
-        // Perintah "link" dari user yang sudah terdaftar — konfirmasi sudah terdaftar
-        if (str_starts_with($textL, 'link ')) {
-            return response()->json([
-                'reply' => "✅ Nomor kamu sudah terdaftar, *{$user->name}*!\nKetik *help* untuk melihat perintah."
-            ]);
+        // User biasa (role=user) — tidak bisa akses perintah admin, abaikan
+        if ($user->isUser()) {
+            return response()->json(['reply' => null]);
         }
 
         $reply = $this->processCommand($textL, $user);
