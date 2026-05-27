@@ -86,4 +86,20 @@ class User extends Authenticatable
     {
         return $this->role === 'user';
     }
+
+    /**
+     * Ambil label user_type dari tabel user_types.
+     * Fallback ke ucfirst(code) jika tidak ditemukan.
+     */
+    public function getUserTypeLabelAttribute(): string
+    {
+        if (empty($this->user_type)) return '—';
+
+        static $cache = [];
+        if (!isset($cache[$this->user_type])) {
+            $type = \App\Models\UserType::where('code', $this->user_type)->first();
+            $cache[$this->user_type] = $type ? $type->name : ucfirst(str_replace('_', ' ', $this->user_type));
+        }
+        return $cache[$this->user_type];
+    }
 }

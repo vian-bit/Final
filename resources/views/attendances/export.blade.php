@@ -71,7 +71,7 @@
                     <td class="hidden lg:table-cell" style="color:var(--gray-500);">{{ $attendance->user->department->name }}</td>
                     <td class="hidden md:table-cell" style="color:var(--gray-500);">
                         @if($attendance->user->user_type)
-                            {{ $attendance->user->user_type === 'magang' ? 'Intern' : 'Daily Worker' }}
+                            {{ $attendance->user->user_type_label }}
                         @else —
                         @endif
                     </td>

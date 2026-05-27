@@ -54,7 +54,7 @@
                 <tr>
                     <td>
                         <div class="font-bold" style="color:var(--brown-900);">{{ $user->name }}</div>
-                        <div class="text-xs" style="color:var(--gray-300);">{{ $user->user_type === 'magang' ? 'Intern' : 'Daily Worker' }}</div>
+                        <div class="text-xs" style="color:var(--gray-300);">{{ $user->user_type_label }}</div>
                     </td>
                     <td class="hidden lg:table-cell" style="color:var(--gray-500);">{{ $user->department->name }}</td>
                     <td>

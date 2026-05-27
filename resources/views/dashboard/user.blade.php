@@ -25,8 +25,7 @@
             <div class="text-xs" style="color:var(--gray-300); letter-spacing:0.06em; text-transform:uppercase;">Type</div>
             <div class="text-sm font-bold" style="color:var(--brown-900);">
                 @if(Auth::user()->user_type === 'trainee') Trainee
-                @elseif(Auth::user()->user_type === 'daily_worker') Daily Worker
-                @else {{ ucfirst(Auth::user()->user_type ?? '—') }}
+                @else {{ Auth::user()->user_type_label }}
                 @endif
             </div>
         </div>

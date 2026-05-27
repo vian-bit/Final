@@ -31,7 +31,7 @@
                     <td class="hidden lg:table-cell" style="color:var(--gray-500);">{{ $user->department->name ?? '—' }}</td>
                     <td>
                         @if($user->user_type)
-                            <span class="badge badge-gray">{{ $user->user_type === 'magang' ? 'Intern' : ($user->user_type === 'daily_worker' ? 'Daily Worker' : ucfirst($user->user_type)) }}</span>
+                            <span class="badge badge-gray">{{ $user->user_type_label }}</span>
                         @else <span style="color:var(--gray-300);">—</span>
                         @endif
                     </td>
