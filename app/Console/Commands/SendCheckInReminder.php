@@ -47,10 +47,12 @@ class SendCheckInReminder extends Command
             $user = $schedule->user;
             if (empty($user->phone) || !$user->is_active) continue;
 
-            $key = 'checkin_reminder_' . $user->id . '_' . now('Asia/Jakarta')->format('Y-m-d');
-
-            if (!Cache::add($key, true, now('Asia/Jakarta')->endOfDay())) {
-            continue;
+            // Lewati cache check jika --force digunakan
+            if (!$force) {
+                $key = 'checkin_reminder_' . $user->id . '_' . now('Asia/Jakarta')->format('Y-m-d');
+                if (!Cache::add($key, true, now('Asia/Jakarta')->endOfDay())) {
+                    continue;
+                }
             }
 
             $shiftStart = Carbon::createFromFormat('H:i:s', $schedule->shift->start_time)->format('H:i');
@@ -66,7 +68,7 @@ class SendCheckInReminder extends Command
 
         if (!empty($targets)) {
             $wa->sendBulkPublic($targets);
-            $this->info("✓ {$schedules->count()} reminder dikirim.");
+            $this->info("✓ " . count($targets) . " reminder dikirim.");
         }
 
         return self::SUCCESS;
