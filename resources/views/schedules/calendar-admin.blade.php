@@ -25,7 +25,7 @@
                         <select name="user_id" class="gh-select" onchange="this.form.submit()">
                             @foreach($users as $user)
                             <option value="{{ $user->id }}" {{ $selectedUserId == $user->id ? 'selected' : '' }}>
-                                {{ $user->name }} — {{ $user->user_type === 'magang' ? 'Intern' : 'Daily Worker' }}
+                                {{ $user->name }} — {{ $user->user_type_label }}
                             </option>
                             @endforeach
                         </select>

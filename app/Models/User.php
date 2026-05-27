@@ -32,6 +32,8 @@ class User extends Authenticatable
         'is_active',
     ];
 
+    protected $appends = ['user_type_label'];
+
     /**
      * The attributes that should be hidden for serialization.
      *
