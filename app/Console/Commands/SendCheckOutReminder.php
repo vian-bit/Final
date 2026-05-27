@@ -47,11 +47,13 @@ class SendCheckOutReminder extends Command
             if (!$user->is_active) continue;
             if (empty($user->phone) && empty($user->wa_lid)) continue;
 
-            // Dedup: hanya kirim sekali per user per hari
-            $key = 'checkout_reminder_' . $user->id . '_' . $now->format('Y-m-d');
-            if (!Cache::add($key, true, $now->copy()->endOfDay())) {
-                $this->line("→ Skip {$user->name} (sudah dikirim hari ini)");
-                continue;
+            // Dedup: hanya kirim sekali per user per hari (bypass jika --force)
+            if (!$force) {
+                $key = 'checkout_reminder_' . $user->id . '_' . $now->format('Y-m-d');
+                if (!Cache::add($key, true, $now->copy()->endOfDay())) {
+                    $this->line("→ Skip {$user->name} (sudah dikirim hari ini)");
+                    continue;
+                }
             }
 
             $shiftEnd = Carbon::createFromFormat('H:i:s', $attendance->schedule->shift->end_time)->format('H:i');
