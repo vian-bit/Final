@@ -24,12 +24,12 @@ class SendCheckOutReminder extends Command
             ->whereNull('check_out');
 
         if (!$force) {
-            // Kirim ke user yang shift-nya sudah selesai 5 menit lalu (toleransi ±1 menit)
-            // end_time antara (now - 6 menit) sampai (now - 4 menit)
+            // Kirim ke user yang shift-nya sudah selesai dalam 10 menit terakhir (toleransi lebih longgar)
+            // end_time antara (now - 10 menit) sampai (now)
             $query->whereHas('schedule.shift', function ($q) use ($now) {
                 $q->whereBetween('end_time', [
-                    $now->copy()->subMinutes(6)->format('H:i:s'),
-                    $now->copy()->subMinutes(4)->format('H:i:s'),
+                    $now->copy()->subMinutes(10)->format('H:i:s'),
+                    $now->format('H:i:s'),
                 ]);
             });
         }
@@ -44,8 +44,8 @@ class SendCheckOutReminder extends Command
         $targets = [];
         foreach ($attendances as $attendance) {
             $user = $attendance->user;
-            if (empty($user->phone) && empty($user->wa_lid)) continue;
             if (!$user->is_active) continue;
+            if (empty($user->phone) && empty($user->wa_lid)) continue;
 
             // Dedup: hanya kirim sekali per user per hari
             $key = 'checkout_reminder_' . $user->id . '_' . $now->format('Y-m-d');
@@ -61,10 +61,10 @@ class SendCheckOutReminder extends Command
             $msg .= "⏰ Shift kamu (*{$attendance->schedule->shift->name}*) sudah selesai pukul *{$shiftEnd}*.\n\n";
             $msg .= "Kamu belum *Check Out*. Jangan lupa ya! 😊";
 
-            if (!empty($user->phone)) {
-                $targets[] = ['phone' => $user->phone, 'message' => $msg];
-            }
-            $this->line("→ Reminder checkout ke {$user->name} ({$user->phone}) shift ended {$shiftEnd}");
+            // Gunakan phone jika ada, fallback ke wa_lid
+            $phoneTarget = !empty($user->phone) ? $user->phone : $user->wa_lid;
+            $targets[] = ['phone' => $phoneTarget, 'message' => $msg];
+            $this->line("→ Reminder checkout ke {$user->name} ({$phoneTarget}) shift ended {$shiftEnd}");
         }
 
         if (!empty($targets)) {
