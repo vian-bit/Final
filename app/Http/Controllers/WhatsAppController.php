@@ -153,8 +153,11 @@ class WhatsAppController extends Controller
             ]);
         }
 
-        // User biasa (role=user) — tidak bisa akses perintah admin, abaikan
+        // User biasa (role=user) — bisa cek jadwal, selain itu abaikan
         if ($user->isUser()) {
+            if (in_array($textL, ['jadwal', 'shift', 'schedule'])) {
+                return response()->json(['reply' => $this->buildJadwalUser($user)]);
+            }
             return response()->json(['reply' => null]);
         }
 
@@ -324,4 +327,50 @@ class WhatsAppController extends Controller
                 . "🔗 *link email@kamu.com* — hubungkan nomor WA ke akun\n\n"
                 . "_Hanya admin terdaftar yang dapat menggunakan bot ini._";
         }
+
+    protected function buildJadwalUser(User $user): string
+    {
+        $today    = today();
+        $schedule = Schedule::with('shift')
+            ->where('user_id', $user->id)
+            ->whereDate('date', $today)
+            ->first();
+
+        $line = str_repeat('─', 28);
+        $msg  = "🏨 *Grandhika Intern and Daily Worker Attendance*\n\n";
+        $msg .= "Halo *{$user->name}*,\n";
+        $msg .= "📅 {$today->translatedFormat('l, d F Y')}\n";
+        $msg .= "{$line}\n";
+
+        if (!$schedule) {
+            $msg .= "📭 Kamu tidak memiliki jadwal shift hari ini.\n";
+            $msg .= "_Selamat istirahat! 😊_";
+            return $msg;
+        }
+
+        $shiftStart = Carbon::createFromFormat('H:i:s', $schedule->shift->start_time)->format('H:i');
+        $shiftEnd   = Carbon::createFromFormat('H:i:s', $schedule->shift->end_time)->format('H:i');
+
+        // Cek status absensi
+        $attendance = \App\Models\Attendance::where('user_id', $user->id)
+            ->whereDate('date', $today)
+            ->first();
+
+        $msg .= "🕐 *Shift*    : {$schedule->shift->name}\n";
+        $msg .= "⏰ *Mulai*    : {$shiftStart}\n";
+        $msg .= "🏁 *Selesai*  : {$shiftEnd}\n";
+        $msg .= "{$line}\n";
+
+        if (!$attendance) {
+            $msg .= "📌 Status    : Belum Check In\n";
+        } elseif ($attendance->check_in && !$attendance->check_out) {
+            $msg .= "✅ Check In  : {$attendance->check_in}\n";
+            $msg .= "📌 Check Out : Belum\n";
+        } else {
+            $msg .= "✅ Check In  : {$attendance->check_in}\n";
+            $msg .= "✅ Check Out : {$attendance->check_out}\n";
+        }
+
+        return $msg;
+    }
 }
