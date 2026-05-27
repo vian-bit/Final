@@ -70,7 +70,10 @@ class SendCheckOutReminder extends Command
         }
 
         if (!empty($targets)) {
-            $wa->sendBulkPublic($targets);
+            // Kirim dalam batch 50 agar tidak overload WA server & RAM
+            foreach (array_chunk($targets, 50) as $batch) {
+                $wa->sendBulkPublic($batch);
+            }
             $this->info("✓ " . count($targets) . " reminder checkout dikirim.");
         }
 
