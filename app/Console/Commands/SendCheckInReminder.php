@@ -31,8 +31,8 @@ class SendCheckInReminder extends Command
             $query->where(function ($q) use ($target) {
                 $q->whereHas('shift', function ($q) use ($target) {
                     $q->whereBetween('start_time', [
-                        $target->copy()->subMinute()->format('H:i:s'),
-                        $target->copy()->addMinute()->format('H:i:s'),
+                        $target->copy()->subMinutes(2)->format('H:i:s'),
+                        $target->copy()->addMinutes(2)->format('H:i:s'),
                     ]);
                 });
             });
@@ -76,10 +76,13 @@ class SendCheckInReminder extends Command
             }
 
             $shiftStart = Carbon::createFromFormat('H:i:s', $schedule->shift->start_time)->format('H:i');
+            $menitLagi  = (int) $now->diffInMinutes(
+                Carbon::createFromFormat('H:i:s', $schedule->shift->start_time)->setDateFrom($now)
+            );
 
             $msg  = "🏨 *Grandhika Intern and Daily Worker Attendance*\n\n";
             $msg .= "Halo *{$user->name}*,\n\n";
-            $msg .= "⏰ Shift kamu (*{$schedule->shift->name}*) dimulai pukul *{$shiftStart}* — 10 menit lagi!\n\n";
+            $msg .= "⏰ Shift kamu (*{$schedule->shift->name}*) dimulai pukul *{$shiftStart}* — *{$menitLagi} menit lagi!*\n\n";
             $msg .= "Jangan lupa *Check In* ya. 😊";
 
             $targets[] = ['phone' => $user->phone, 'message' => $msg];

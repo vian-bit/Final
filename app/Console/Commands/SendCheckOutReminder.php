@@ -68,11 +68,13 @@ class SendCheckOutReminder extends Command
                 }
             }
 
-            $shiftEnd = Carbon::createFromFormat('H:i:s', $attendance->schedule->shift->end_time)->format('H:i');
+            $shiftEnd    = Carbon::createFromFormat('H:i:s', $attendance->schedule->shift->end_time)->format('H:i');
+            $shiftEndDt  = Carbon::createFromFormat('H:i:s', $attendance->schedule->shift->end_time)->setDateFrom($now);
+            $menitSetelah = (int) $shiftEndDt->diffInMinutes($now);
 
             $msg  = "🏨 *Grandhika Intern and Daily Worker Attendance*\n\n";
             $msg .= "Halo *{$user->name}*,\n\n";
-            $msg .= "⏰ Shift kamu (*{$attendance->schedule->shift->name}*) sudah selesai pukul *{$shiftEnd}*.\n\n";
+            $msg .= "⏰ Shift kamu (*{$attendance->schedule->shift->name}*) sudah selesai pukul *{$shiftEnd}* — *{$menitSetelah} menit yang lalu.*\n\n";
             $msg .= "Kamu belum *Check Out*. Jangan lupa ya! 😊";
 
             // Gunakan phone jika ada, fallback ke wa_lid
