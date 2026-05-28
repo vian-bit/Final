@@ -182,14 +182,23 @@ Admin dan user dibuat melalui panel Superuser.
 
 | Command | Jadwal | Keterangan |
 |---------|--------|------------|
-| `attendance:send-checkin-reminder` | Setiap menit | Reminder 10 menit sebelum shift mulai |
-| `attendance:send-checkout-reminder` | Setiap menit | Reminder setelah shift selesai |
+| `attendance:send-checkin-reminder` | Setiap 2 menit | Reminder sebelum shift mulai (menit dinamis) |
+| `attendance:send-checkout-reminder` | Setiap 2 menit | Reminder setelah shift selesai (menit dinamis) |
 | `attendance:send-daily-report` | Setiap hari 17:00 WIB | Rekap harian ke semua admin |
 
 ### Jalankan Manual (Testing)
 ```bash
 # Clear cache reminder dulu
 php artisan cache:clear
+
+# Cek status cache reminder hari ini
+php artisan reminder:clear-cache --check
+
+# Hapus cache reminder hari ini
+php artisan reminder:clear-cache
+
+# Hapus cache reminder 7 hari ke belakang
+php artisan reminder:clear-cache --all
 
 # Test checkin reminder (bypass filter waktu & cache)
 php artisan attendance:send-checkin-reminder --force
