@@ -15,15 +15,15 @@ class Kernel extends ConsoleKernel
             ->timezone('Asia/Jakarta')
             ->withoutOverlapping();
 
-        // Kirim reminder check-in setiap menit (command sendiri yang filter shift 10 menit lagi)
+        // Kirim reminder check-in setiap 2 menit
         $schedule->command('attendance:send-checkin-reminder')
-            ->everyMinute()
+            ->everyTwoMinutes()
             ->timezone('Asia/Jakarta')
             ->withoutOverlapping();
 
-        // Kirim reminder check-out setiap menit (command sendiri yang filter shift selesai 10 menit lagi)
+        // Kirim reminder check-out setiap 2 menit
         $schedule->command('attendance:send-checkout-reminder')
-            ->everyMinute()
+            ->everyTwoMinutes()
             ->timezone('Asia/Jakarta')
             ->withoutOverlapping();
     }
