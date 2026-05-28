@@ -24,13 +24,21 @@ class SendCheckOutReminder extends Command
             ->whereNull('check_out');
 
         if (!$force) {
-            // Kirim ke user yang shift-nya sudah selesai dalam 10 menit terakhir (toleransi lebih longgar)
-            // end_time antara (now - 10 menit) sampai (now)
+            // Kirim ke user yang shift-nya sudah selesai dalam 10 menit terakhir
+            // Handle shift selesai 00:00: end_time = '00:00:00' berarti tengah malam
             $query->whereHas('schedule.shift', function ($q) use ($now) {
-                $q->whereBetween('end_time', [
-                    $now->copy()->subMinutes(10)->format('H:i:s'),
-                    $now->format('H:i:s'),
-                ]);
+                $q->where(function ($q) use ($now) {
+                    // Shift normal: end_time antara (now-10 menit) sampai now
+                    $q->where('end_time', '!=', '00:00:00')
+                      ->whereBetween('end_time', [
+                          $now->copy()->subMinutes(10)->format('H:i:s'),
+                          $now->format('H:i:s'),
+                      ]);
+                })->orWhere(function ($q) use ($now) {
+                    // Shift selesai tengah malam (00:00): kirim saat jam 00:00 - 00:10
+                    $q->where('end_time', '00:00:00')
+                      ->whereBetween(\DB::raw("TIME(NOW())"), ['00:00:00', '00:10:00']);
+                });
             });
         }
 
@@ -49,8 +57,12 @@ class SendCheckOutReminder extends Command
 
             // Dedup: hanya kirim sekali per user per hari (bypass jika --force)
             if (!$force) {
-                $key = 'checkout_reminder_' . $user->id . '_' . $now->format('Y-m-d');
-                if (!Cache::add($key, true, $now->copy()->endOfDay())) {
+                $key = 'checkout_reminder_' . $user->id . '_' . $attendance->date->format('Y-m-d');
+                // Untuk shift selesai 00:00, tambah 1 jam agar cache tidak expired sebelum waktunya
+                $ttl = $attendance->schedule->shift->end_time === '00:00:00'
+                    ? $attendance->date->copy()->endOfDay()->addHours(1)
+                    : $attendance->date->copy()->endOfDay();
+                if (!Cache::add($key, true, $ttl)) {
                     $this->line("→ Skip {$user->name} (sudah dikirim hari ini)");
                     continue;
                 }

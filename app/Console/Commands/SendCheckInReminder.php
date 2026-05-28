@@ -27,12 +27,32 @@ class SendCheckInReminder extends Command
 
         if (!$force) {
             // Hanya shift yang mulai dalam ~10 menit (toleransi ±1 menit)
-            $query->whereHas('shift', function ($q) use ($target) {
-                $q->whereBetween('start_time', [
-                    $target->copy()->subMinute()->format('H:i:s'),
-                    $target->copy()->addMinute()->format('H:i:s'),
-                ]);
+            // Handle midnight shift (00:00): cek juga schedule besok
+            $query->where(function ($q) use ($target) {
+                $q->whereHas('shift', function ($q) use ($target) {
+                    $q->whereBetween('start_time', [
+                        $target->copy()->subMinute()->format('H:i:s'),
+                        $target->copy()->addMinute()->format('H:i:s'),
+                    ]);
+                });
             });
+
+            // Jika target melewati tengah malam (23:50 - 00:10),
+            // cek juga schedule besok untuk shift yang mulai 00:00
+            if ($target->format('H:i') < '00:10') {
+                $query->orWhere(function ($q) use ($target) {
+                    $q->whereDate('date', today()->addDay())
+                      ->whereHas('shift', function ($q) use ($target) {
+                          $q->whereBetween('start_time', [
+                              $target->copy()->subMinute()->format('H:i:s'),
+                              $target->copy()->addMinute()->format('H:i:s'),
+                          ]);
+                      })
+                      ->whereDoesntHave('attendance', function ($q) {
+                          $q->whereNotNull('check_in');
+                      });
+                });
+            }
         }
 
         $schedules = $query->get();
@@ -49,8 +69,8 @@ class SendCheckInReminder extends Command
 
             // Lewati cache check jika --force digunakan
             if (!$force) {
-                $key = 'checkin_reminder_' . $user->id . '_' . now('Asia/Jakarta')->format('Y-m-d');
-                if (!Cache::add($key, true, now('Asia/Jakarta')->endOfDay())) {
+                $key = 'checkin_reminder_' . $user->id . '_' . $schedule->date->format('Y-m-d');
+                if (!Cache::add($key, true, $schedule->date->copy()->endOfDay())) {
                     continue;
                 }
             }
