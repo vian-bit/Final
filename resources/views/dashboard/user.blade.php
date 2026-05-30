@@ -149,11 +149,18 @@
         <h2 class="font-header" style="letter-spacing:0.1em;">Overnight Shift</h2>
     </div>
     <div class="p-5">
+        @php
+            $overnightShift = $todayAttendance->schedule?->shift;
+            $overnightShiftEnd = $overnightShift?->end_time;
+        @endphp
         <div class="p-3 rounded-lg mb-4 flex items-center gap-2" style="background:#d1fae5; border:1px solid #a7f3d0;">
             <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="#065f46" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
-            <span class="text-sm font-bold" style="color:#065f46;">Checked In: {{ $todayAttendance->check_in }} ({{ $todayAttendance->date->format('d/m/Y') }})</span>
+            <span class="text-sm font-bold" style="color:#065f46;">
+                Checked In: {{ $todayAttendance->check_in }} ({{ $todayAttendance->date->format('d/m/Y') }})
+                @if($overnightShift) — Shift {{ $overnightShift->name }} s/d {{ $overnightShiftEnd }} @endif
+            </span>
         </div>
 
         <div class="text-center mb-4">
@@ -270,6 +277,12 @@ function showCheckOutModal() {
     const now = new Date();
     const cur = now.getHours() * 60 + now.getMinutes();
     const [eh, em] = '{{ $todaySchedule->shift->end_time }}'.split(':').map(Number);
+    if (cur < eh * 60 + em) document.getElementById('earlyCheckoutWarning').classList.remove('hidden');
+    @elseif($todayAttendance && !$todayAttendance->check_out && $todayAttendance->schedule?->shift)
+    const now = new Date();
+    const cur = now.getHours() * 60 + now.getMinutes();
+    const [eh, em] = '{{ $todayAttendance->schedule?->shift?->end_time ?? "00:00" }}'.split(':').map(Number);
+    // Overnight: end_time lebih kecil dari start_time, jadi cek apakah belum lewat end_time hari ini
     if (cur < eh * 60 + em) document.getElementById('earlyCheckoutWarning').classList.remove('hidden');
     @endif
 }
