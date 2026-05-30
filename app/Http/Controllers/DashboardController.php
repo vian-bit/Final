@@ -64,12 +64,28 @@ class DashboardController extends Controller
     private function userDashboard()
     {
         $user = Auth::user()->load('department');
-        
-        $todayAttendance = Attendance::where('user_id', $user->id)
+
+        // Cari schedule hari ini
+        $todaySchedule = Schedule::where('user_id', $user->id)
             ->whereDate('date', today())
+            ->with('shift')
             ->first();
-        
-        // Cek early checkout request untuk hari ini
+
+        // Cari attendance: hari ini atau kemarin yang belum checkout (overnight shift)
+        $todayAttendance = Attendance::where('user_id', $user->id)
+            ->whereIn('date', [today(), today()->subDay()])
+            ->whereNotNull('check_in')
+            ->latest('date')
+            ->first();
+
+        // Jika attendance sudah checkout, cari yang hari ini saja
+        if ($todayAttendance && $todayAttendance->check_out) {
+            $todayAttendance = Attendance::where('user_id', $user->id)
+                ->whereDate('date', today())
+                ->first();
+        }
+
+        // Cek early checkout request
         $earlyCheckoutRequest = null;
         if ($todayAttendance) {
             $earlyCheckoutRequest = \App\Models\EarlyCheckoutRequest::where('attendance_id', $todayAttendance->id)
@@ -77,15 +93,12 @@ class DashboardController extends Controller
                 ->latest()
                 ->first();
         }
-        
+
         $data = [
-            'todaySchedule' => Schedule::where('user_id', $user->id)
-                ->whereDate('date', today())
-                ->with('shift')
-                ->first(),
-            'todayAttendance' => $todayAttendance,
+            'todaySchedule'        => $todaySchedule,
+            'todayAttendance'      => $todayAttendance,
             'earlyCheckoutRequest' => $earlyCheckoutRequest,
-            'recentAttendances' => Attendance::where('user_id', $user->id)
+            'recentAttendances'    => Attendance::where('user_id', $user->id)
                 ->orderBy('date', 'desc')
                 ->limit(5)
                 ->get(),
