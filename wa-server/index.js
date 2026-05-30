@@ -117,7 +117,7 @@ async function connectToWhatsApp() {
             console.log('  SCAN QR CODE INI DENGAN WHATSAPP KAMU');
             console.log('========================================\n');
             qrcode.generate(qr, { small: true });
-            console.log('\nAtau buka browser: http://localhost:' + PORT + '/qr\n');
+            console.log('\nAtau buka browser: http://202.155.18.115:' + PORT + '/qr\n');
         }
 
         if (connection === 'open') {
@@ -169,14 +169,43 @@ app.get('/qr', (req, res) => {
     }
     const encoded = encodeURIComponent(currentQR);
     res.send(`<!DOCTYPE html><html>
-    <head><title>Scan QR WhatsApp</title><meta http-equiv="refresh" content="30">
-    <style>body{font-family:sans-serif;text-align:center;padding:40px;background:#f0f0f0}</style></head>
+    <head><title>Scan QR WhatsApp</title>
+    <style>
+        body{font-family:sans-serif;text-align:center;padding:40px;background:#f0f0f0}
+        #countdown{font-size:2rem;font-weight:bold;color:#333;margin:10px 0}
+        #countdown.urgent{color:#dc2626}
+        #refresh-btn{display:none;margin-top:16px;padding:10px 24px;background:#4f46e5;color:white;border:none;border-radius:8px;font-size:1rem;cursor:pointer}
+        #refresh-btn:hover{background:#4338ca}
+        #bar-wrap{width:300px;margin:8px auto;background:#ddd;border-radius:99px;height:6px}
+        #bar{height:6px;border-radius:99px;background:#4f46e5;transition:width 1s linear}
+    </style></head>
     <body>
         <h2>📱 Scan QR Code dengan WhatsApp kamu</h2>
         <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encoded}"
              style="border:8px solid white;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.2)">
-        <p style="color:#666">Auto-refresh tiap 30 detik</p>
-        <p style="color:#999;font-size:12px">WhatsApp → Linked Devices → Link a Device</p>
+        <p style="color:#666;margin-bottom:4px">QR expired dalam</p>
+        <div id="countdown">30</div>
+        <div id="bar-wrap"><div id="bar" style="width:100%"></div></div>
+        <button id="refresh-btn" onclick="location.reload()">🔄 Refresh QR</button>
+        <p style="color:#999;font-size:12px;margin-top:16px">WhatsApp → Linked Devices → Link a Device</p>
+        <script>
+            let t = 30;
+            const el  = document.getElementById('countdown');
+            const bar = document.getElementById('bar');
+            const btn = document.getElementById('refresh-btn');
+            const iv  = setInterval(() => {
+                t--;
+                el.textContent = t;
+                bar.style.width = (t / 30 * 100) + '%';
+                if (t <= 10) { el.classList.add('urgent'); bar.style.background = '#dc2626'; }
+                if (t <= 0) {
+                    clearInterval(iv);
+                    el.textContent = 'QR Expired';
+                    bar.style.width = '0%';
+                    btn.style.display = 'inline-block';
+                }
+            }, 1000);
+        </script>
     </body></html>`);
 });
 
