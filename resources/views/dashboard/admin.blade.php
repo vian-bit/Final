@@ -74,64 +74,8 @@
     </div>
 </div>
 
-<!-- WhatsApp Status -->
-<div class="gh-card" style="padding:0; overflow:hidden;">
-    <div class="gh-card-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div class="flex items-center gap-3">
-            <svg class="w-5 h-5" fill="none" stroke="rgba(201,168,76,0.8)" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-            </svg>
-            <h2 class="font-header" style="letter-spacing:0.1em;">WhatsApp Status</h2>
-            <span id="wa-badge" class="badge badge-gray">...</span>
-        </div>
-        <div class="flex gap-2">
-            <a href="#" id="wa-qr-link" target="_blank" class="hidden btn btn-secondary text-xs">Scan QR</a>
-            <form method="POST" action="{{ route('whatsapp.send-report') }}">
-                @csrf
-                <button type="submit" id="wa-send-btn" class="btn btn-success text-xs" disabled>
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
-                    </svg>
-                    Kirim Rekap
-                </button>
-            </form>
-        </div>
-    </div>
-    <div class="px-6 py-3">
-        <p class="text-sm" id="wa-status-text" style="color:var(--gray-500);">Mengecek koneksi...</p>
-    </div>
-</div>
+@include('dashboard.partials.wa-status')
 
 <script>
-async function checkWAStatus() {
-    try {
-        const res  = await fetch('{{ route("whatsapp.status") }}');
-        const data = await res.json();
-        const badge  = document.getElementById('wa-badge');
-        const text   = document.getElementById('wa-status-text');
-        const btn    = document.getElementById('wa-send-btn');
-        const qrLink = document.getElementById('wa-qr-link');
-
-        if (!data.server_running) {
-            badge.className = 'badge badge-danger'; badge.textContent = 'Server Mati';
-            text.textContent = 'Jalankan START-WA-SERVER.bat terlebih dahulu';
-        } else if (data.wa_connected) {
-            badge.className = 'badge badge-success'; badge.textContent = 'Terhubung';
-            text.textContent = 'WhatsApp siap mengirim pesan';
-            btn.disabled = false; qrLink.classList.add('hidden');
-        } else if (data.has_qr) {
-            badge.className = 'badge badge-warning'; badge.textContent = 'Perlu Scan QR';
-            text.textContent = 'Klik "Scan QR" untuk menghubungkan WhatsApp';
-            qrLink.href = data.qr_url; qrLink.classList.remove('hidden');
-        } else {
-            badge.className = 'badge badge-warning'; badge.textContent = 'Menghubungkan...';
-            text.textContent = 'Sedang menghubungkan ke WhatsApp';
-        }
-    } catch(e) {
-        document.getElementById('wa-status-text').textContent = 'Tidak dapat mengecek status';
-    }
-}
-checkWAStatus();
-setInterval(checkWAStatus, 10000);
 </script>
 @endsection
