@@ -274,16 +274,20 @@ function showCheckOutModal() {
     document.getElementById('checkoutModal').classList.remove('hidden');
     document.getElementById('checkoutModal').classList.add('flex');
     @if($todaySchedule)
+    {{-- Deteksi early checkout hanya untuk shift normal (bukan overnight) --}}
+    @php
+        $startMinutes = (int)\Carbon\Carbon::createFromFormat('H:i:s', $todaySchedule->shift->start_time)->format('H') * 60
+            + (int)\Carbon\Carbon::createFromFormat('H:i:s', $todaySchedule->shift->start_time)->format('i');
+        $endMinutes = (int)\Carbon\Carbon::createFromFormat('H:i:s', $todaySchedule->shift->end_time)->format('H') * 60
+            + (int)\Carbon\Carbon::createFromFormat('H:i:s', $todaySchedule->shift->end_time)->format('i');
+        $isOvernightShift = $endMinutes < $startMinutes || $endMinutes === 0;
+    @endphp
+    @if(!$isOvernightShift)
     const now = new Date();
     const cur = now.getHours() * 60 + now.getMinutes();
-    const [eh, em] = '{{ $todaySchedule->shift->end_time }}'.split(':').map(Number);
-    if (cur < eh * 60 + em) document.getElementById('earlyCheckoutWarning').classList.remove('hidden');
-    @elseif($todayAttendance && !$todayAttendance->check_out && $todayAttendance->schedule?->shift)
-    const now = new Date();
-    const cur = now.getHours() * 60 + now.getMinutes();
-    const [eh, em] = '{{ $todayAttendance->schedule?->shift?->end_time ?? "00:00" }}'.split(':').map(Number);
-    // Overnight: end_time lebih kecil dari start_time, jadi cek apakah belum lewat end_time hari ini
-    if (cur < eh * 60 + em) document.getElementById('earlyCheckoutWarning').classList.remove('hidden');
+    const shiftEndMinutes = {{ $endMinutes }};
+    if (cur < shiftEndMinutes) document.getElementById('earlyCheckoutWarning').classList.remove('hidden');
+    @endif
     @endif
 }
 function closeCheckOutModal() {
