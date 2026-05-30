@@ -19,7 +19,7 @@ class SendCheckOutReminder extends Command
         $force = $this->option('force');
 
         $query = Attendance::with(['user', 'schedule.shift'])
-            ->whereDate('date', today())
+            ->whereIn('date', [today(), today()->subDay()])
             ->whereNotNull('check_in')
             ->whereNull('check_out');
 

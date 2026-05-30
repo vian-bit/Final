@@ -87,12 +87,16 @@ class AttendanceController extends Controller
 
     public function checkOut(Request $request)
     {
-        $user = Auth::user();
+        $user  = Auth::user();
         $today = today();
-        
+
+        // Cari attendance hari ini, atau kemarin (untuk shift overnight)
         $attendance = Attendance::where('user_id', $user->id)
-            ->whereDate('date', $today)
+            ->whereNull('check_out')
+            ->whereNotNull('check_in')
+            ->whereIn('date', [$today, $today->copy()->subDay()])
             ->with('schedule.shift')
+            ->latest('date')
             ->first();
 
         if (!$attendance || !$attendance->check_in) {
