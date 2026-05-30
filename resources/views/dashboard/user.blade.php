@@ -142,6 +142,38 @@
         @endif
     </div>
 </div>
+@elseif($todayAttendance && !$todayAttendance->check_out)
+{{-- Tidak ada schedule hari ini tapi ada attendance overnight yang belum checkout --}}
+<div class="gh-card mb-5" style="padding:0; overflow:hidden;">
+    <div class="gh-card-header">
+        <h2 class="font-header" style="letter-spacing:0.1em;">Overnight Shift</h2>
+    </div>
+    <div class="p-5">
+        <div class="p-3 rounded-lg mb-4 flex items-center gap-2" style="background:#d1fae5; border:1px solid #a7f3d0;">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="#065f46" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <span class="text-sm font-bold" style="color:#065f46;">Checked In: {{ $todayAttendance->check_in }} ({{ $todayAttendance->date->format('d/m/Y') }})</span>
+        </div>
+
+        <div class="text-center mb-4">
+            <div class="text-xs font-bold mb-1" style="color:var(--gray-300); letter-spacing:0.08em; text-transform:uppercase;">Working Time</div>
+            <div class="text-2xl font-bold" id="work-duration" style="color:var(--brown-900); font-family:'Copperplate',serif;">00:00:00</div>
+        </div>
+
+        <button onclick="showCheckOutModal()"
+            class="btn btn-primary w-full justify-center py-4" style="font-size:1rem;">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+            </svg>
+            Check Out Now
+        </button>
+        <form method="POST" action="{{ route('attendances.checkout') }}" id="checkoutForm" class="hidden">
+            @csrf
+            <input type="hidden" name="reason" id="checkoutReason">
+        </form>
+    </div>
+</div>
 @else
 <div class="gh-card mb-5 text-center py-8" style="color:var(--gray-300);">
     <svg class="w-10 h-10 mx-auto mb-2 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
