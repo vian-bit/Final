@@ -56,10 +56,12 @@
                     <td class="hidden md:table-cell" style="color:var(--gray-500);">
                         @if($attendance->check_in && $attendance->check_out)
                             @php
-                                $diff = \Carbon\Carbon::createFromFormat('H:i:s', $attendance->check_in)
-                                    ->diff(\Carbon\Carbon::createFromFormat('H:i:s', $attendance->check_out));
+                                $checkIn  = \Carbon\Carbon::parse($attendance->date->format('Y-m-d') . ' ' . $attendance->check_in);
+                                $checkOut = \Carbon\Carbon::parse($attendance->date->format('Y-m-d') . ' ' . $attendance->check_out);
+                                if ($checkOut->lessThan($checkIn)) $checkOut->addDay();
+                                $diff = $checkIn->diff($checkOut);
                             @endphp
-                            {{ $diff->h }}j {{ $diff->i }}m
+                            {{ $diff->h + ($diff->days * 24) }}j {{ $diff->i }}m
                         @else —
                         @endif
                     </td>
