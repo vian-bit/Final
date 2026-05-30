@@ -28,8 +28,8 @@ async function connectToWhatsApp() {
     const { state, saveCreds } = await useMultiFileAuthState('./auth_info');
     const { version }          = await fetchLatestBaileysVersion();
 
-    // Logger yang hanya tampilkan error fatal, suppress Bad MAC / session noise
-    const logger = pino({ level: 'fatal' });
+    // Logger: info untuk debugging, fatal untuk production
+    const logger = pino({ level: process.env.WA_LOG_LEVEL || 'fatal' });
 
     sock = makeWASocket({
         version,
@@ -140,6 +140,10 @@ async function connectToWhatsApp() {
                     fs.rmSync('./auth_info', { recursive: true, force: true });
                 }
             }
+
+            // Cleanup socket lama sebelum reconnect
+            try { sock?.end?.(); } catch {}
+            sock = null;
 
             // Selalu reconnect agar QR muncul lagi
             console.log('🔄 Reconnect dalam 3 detik...');
