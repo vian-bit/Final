@@ -14,12 +14,17 @@ class SendDailyAttendanceReport extends Command
     {
         $this->info('Mengirim rekap absensi harian...');
 
-        $phone = $this->option('phone');
+        $phone  = $this->option('phone');
+        $deptId = $this->option('department') ? (int) $this->option('department') : null;
 
         if ($phone) {
-            // Kirim ke nomor spesifik (manual)
-            $deptId  = $this->option('department');
-            $result  = $wa->sendDailyReport($deptId ? (int) $deptId : null);
+            // Kirim ke nomor spesifik (manual) dengan department tertentu
+            $deptName = $deptId
+                ? (\App\Models\Department::find($deptId)?->name ?? 'Unknown')
+                : 'Semua Departemen';
+
+            $message = $wa->buildPublicReportMessage($deptId, $deptName);
+            $result  = $wa->sendMessagePublic($phone, $message);
             $this->line($result ? '✓ Berhasil dikirim!' : '✗ Gagal mengirim.');
             return $result ? self::SUCCESS : self::FAILURE;
         }
