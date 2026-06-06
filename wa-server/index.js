@@ -37,8 +37,9 @@ async function connectToWhatsApp() {
         auth: state,
         printQRInTerminal: false,
         browser: ['Hotel Attendance', 'Chrome', '1.0.0'],
-        getMessage: async () => undefined, // return undefined agar pesan lama di-skip
-        shouldIgnoreJid: jid => jid.endsWith('@broadcast'), // abaikan broadcast
+        keepAliveIntervalMs: 30_000, // ping setiap 30 detik agar tidak timeout
+        getMessage: async () => undefined,
+        shouldIgnoreJid: jid => jid.endsWith('@broadcast'),
     });
 
     sock.ev.on('creds.update', saveCreds);
