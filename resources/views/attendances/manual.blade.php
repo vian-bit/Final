@@ -7,8 +7,19 @@
             <h1 class="font-header" style="letter-spacing:0.1em;">Manual Attendance</h1>
             <p class="text-xs mt-1" style="color:rgba(250,248,245,0.6);">Bypass check-in/check-out for human error cases</p>
         </div>
-        <div class="text-xs" style="color:rgba(250,248,245,0.7); letter-spacing:0.06em;">
-            {{ now()->format('d/m/Y') }}
+        <div class="flex items-center gap-3">
+            {{-- Filter tanggal --}}
+            <form method="GET" class="flex items-center gap-2">
+                <input type="date" name="date" value="{{ request('date', today()->format('Y-m-d')) }}"
+                    class="gh-input text-xs" style="width:auto; color:var(--brown-900);">
+                <button type="submit" class="btn btn-gold text-xs px-3 py-1.5">Filter</button>
+                @if(request('date') && request('date') !== today()->format('Y-m-d'))
+                <a href="{{ route('manual-attendance.index') }}" class="btn btn-secondary text-xs px-3 py-1.5">Today</a>
+                @endif
+            </form>
+            <div class="text-xs" style="color:rgba(250,248,245,0.7); letter-spacing:0.06em;">
+                {{ \Carbon\Carbon::parse(request('date', today()))->format('d/m/Y') }}
+            </div>
         </div>
     </div>
 
@@ -128,6 +139,7 @@
             <form method="POST" action="{{ route('manual-attendance.checkin') }}" id="checkInForm">
                 @csrf
                 <input type="hidden" name="user_id" id="checkInUserId">
+                <input type="hidden" name="date" value="{{ request('date', today()->format('Y-m-d')) }}">
                 <div class="mb-5">
                     <label class="gh-label">Check In Time</label>
                     <input type="time" name="check_in_time" id="checkInTime" required class="gh-input">
@@ -152,6 +164,7 @@
             <form method="POST" action="{{ route('manual-attendance.checkout') }}" id="checkOutForm">
                 @csrf
                 <input type="hidden" name="user_id" id="checkOutUserId">
+                <input type="hidden" name="date" value="{{ request('date', today()->format('Y-m-d')) }}">
                 <div class="mb-5">
                     <label class="gh-label">Check Out Time</label>
                     <input type="time" name="check_out_time" id="checkOutTime" required class="gh-input">

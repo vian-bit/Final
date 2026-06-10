@@ -396,108 +396,101 @@ class AttendanceController extends Controller
         return back()->with('success', 'Early checkout request rejected');
     }
 
-    public function manualAttendance()
+    public function manualAttendance(Request $request)
     {
         $user = Auth::user();
-        
+        $date = $request->date ? \Carbon\Carbon::parse($request->date) : today();
+
         // Get users based on role
         $users = User::where('role', 'user')
             ->when($user->isAdmin(), function($q) use ($user) {
                 $q->where('department_id', $user->department_id);
             })
             ->where('is_active', true)
-            ->with(['department', 'schedules' => function($q) {
-                $q->whereDate('date', today())->with('shift');
+            ->with(['department', 'schedules' => function($q) use ($date) {
+                $q->whereDate('date', $date)->with('shift');
             }])
             ->get();
-        
-        // Get today's attendances
-        $attendances = Attendance::whereDate('date', today())
+
+        // Get attendances for the selected date
+        $attendances = Attendance::whereDate('date', $date)
             ->whereIn('user_id', $users->pluck('id'))
             ->get()
             ->keyBy('user_id');
-        
-        return view('attendances.manual', compact('users', 'attendances'));
+
+        return view('attendances.manual', compact('users', 'attendances', 'date'));
     }
 
     public function manualCheckIn(Request $request)
     {
         $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
+            'user_id'       => 'required|exists:users,id',
             'check_in_time' => 'required|date_format:H:i',
+            'date'          => 'nullable|date',
         ]);
 
-        $user = User::findOrFail($validated['user_id']);
-        $today = today();
-        
-        // Check if user has schedule today
+        $user  = User::findOrFail($validated['user_id']);
+        $date  = isset($validated['date']) ? \Carbon\Carbon::parse($validated['date']) : today();
+
         $schedule = Schedule::where('user_id', $user->id)
-            ->whereDate('date', $today)
+            ->whereDate('date', $date)
             ->with('shift')
             ->first();
 
         if (!$schedule) {
-            return back()->with('error', 'User has no schedule today');
+            return back()->with('error', "User tidak memiliki jadwal pada tanggal {$date->format('d/m/Y')}");
         }
 
-        // Check if already checked in
         $existingAttendance = Attendance::where('user_id', $user->id)
-            ->whereDate('date', $today)
+            ->whereDate('date', $date)
             ->first();
 
         if ($existingAttendance && $existingAttendance->check_in) {
-            return back()->with('error', 'User has already checked in today');
+            return back()->with('error', 'User sudah check in pada tanggal tersebut');
         }
 
-        // Calculate status
-        $checkInTime = Carbon::createFromFormat('H:i', $validated['check_in_time'], 'Asia/Jakarta');
-        $shiftStart = Carbon::createFromFormat('H:i:s', $schedule->shift->start_time, 'Asia/Jakarta');
-        $tolerance = $schedule->shift->tolerance_minutes;
-        
+        $checkInTime = \Carbon\Carbon::createFromFormat('H:i', $validated['check_in_time'], 'Asia/Jakarta');
+        $shiftStart  = \Carbon\Carbon::createFromFormat('H:i:s', $schedule->shift->start_time, 'Asia/Jakarta');
+        $tolerance   = $schedule->shift->tolerance_minutes;
+
         $status = $checkInTime->greaterThan($shiftStart->addMinutes($tolerance)) ? 'late' : 'present';
 
         Attendance::updateOrCreate(
-            [
-                'user_id' => $user->id,
-                'schedule_id' => $schedule->id,
-                'date' => $today,
-            ],
-            [
-                'check_in' => $validated['check_in_time'] . ':00',
-                'status' => $status,
-            ]
+            ['user_id' => $user->id, 'schedule_id' => $schedule->id, 'date' => $date->format('Y-m-d')],
+            ['check_in' => $validated['check_in_time'] . ':00', 'status' => $status]
         );
 
-        return back()->with('success', 'Manual check-in successful for ' . $user->name);
+        return back()->with('success', "Manual check-in berhasil untuk {$user->name} ({$date->format('d/m/Y')})");
     }
 
     public function manualCheckOut(Request $request)
     {
         $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
+            'user_id'        => 'required|exists:users,id',
             'check_out_time' => 'required|date_format:H:i',
+            'date'           => 'nullable|date',
         ]);
 
         $user = User::findOrFail($validated['user_id']);
-        $today = today();
-        
+        $date = isset($validated['date']) ? \Carbon\Carbon::parse($validated['date']) : today();
+
         $attendance = Attendance::where('user_id', $user->id)
-            ->whereDate('date', $today)
+            ->whereDate('date', $date)
             ->first();
 
         if (!$attendance || !$attendance->check_in) {
-            return back()->with('error', 'User has not checked in yet');
+            return back()->with('error', "User belum check in pada tanggal {$date->format('d/m/Y')}");
         }
 
         if ($attendance->check_out) {
-            return back()->with('error', 'User has already checked out today');
+            return back()->with('error', 'User sudah check out pada tanggal tersebut');
         }
 
         $attendance->update([
             'check_out' => $validated['check_out_time'] . ':00',
         ]);
 
-        return back()->with('success', 'Manual check-out successful for ' . $user->name);
+        return back()->with('success', "Manual check-out berhasil untuk {$user->name} ({$date->format('d/m/Y')})");
     }
 
     public function bulkCheckIn(Request $request)
