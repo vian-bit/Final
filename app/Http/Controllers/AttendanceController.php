@@ -31,7 +31,10 @@ class AttendanceController extends Controller
                 $q->whereHas('user', fn($query) => $query->where('department_id', $user->department_id));
             })
             ->when($user->isUser(), fn($q) => $q->where('user_id', $user->id))
-            ->when($request->date, fn($q) => $q->whereDate('date', $request->date))
+            ->when($request->date_from, fn($q) => $q->whereDate('date', '>=', $request->date_from))
+            ->when($request->date_to,   fn($q) => $q->whereDate('date', '<=', $request->date_to))
+            ->when(!$request->date_from && !$request->date_to && $request->date,
+                fn($q) => $q->whereDate('date', $request->date))
             ->when($request->user_id, fn($q) => $q->where('user_id', $request->user_id))
             ->orderBy('date', 'desc')
             ->paginate(20)

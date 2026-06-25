@@ -16,23 +16,35 @@
 
     <!-- Filters -->
     <div class="px-6 py-4" style="border-bottom:1px solid var(--cream-200);">
-        <form method="GET" class="flex flex-wrap gap-3">
-            <input type="date" name="date" value="{{ request('date') }}" class="gh-input" style="width:auto; min-width:160px;">
+        <form method="GET" class="flex flex-wrap gap-3 items-end">
+            <div class="flex flex-col gap-1">
+                <label class="text-xs font-bold" style="color:var(--gray-500); letter-spacing:0.06em;">DARI</label>
+                <input type="date" name="date_from" value="{{ request('date_from') }}" class="gh-input" style="width:auto; min-width:150px;">
+            </div>
+            <div class="flex flex-col gap-1">
+                <label class="text-xs font-bold" style="color:var(--gray-500); letter-spacing:0.06em;">SAMPAI</label>
+                <input type="date" name="date_to" value="{{ request('date_to') }}" class="gh-input" style="width:auto; min-width:150px;">
+            </div>
             @if(Auth::user()->isSuperuser() || Auth::user()->isAdmin())
-            <select name="user_id" class="gh-select" style="width:auto; min-width:180px;">
-                <option value="">— Semua User —</option>
-                @foreach($filterUsers as $u)
-                <option value="{{ $u->id }}" {{ request('user_id') == $u->id ? 'selected' : '' }}>{{ $u->name }}</option>
-                @endforeach
-            </select>
+            <div class="flex flex-col gap-1">
+                <label class="text-xs font-bold" style="color:var(--gray-500); letter-spacing:0.06em;">USER</label>
+                <select name="user_id" class="gh-select" style="width:auto; min-width:180px;">
+                    <option value="">— Semua User —</option>
+                    @foreach($filterUsers as $u)
+                    <option value="{{ $u->id }}" {{ request('user_id') == $u->id ? 'selected' : '' }}>{{ $u->name }}</option>
+                    @endforeach
+                </select>
+            </div>
             @endif
-            <button type="submit" class="btn btn-primary">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z"/>
-                </svg>
-                Filter
-            </button>
-            <a href="{{ route('attendances.index') }}" class="btn btn-secondary">Reset</a>
+            <div class="flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z"/>
+                    </svg>
+                    Filter
+                </button>
+                <a href="{{ route('attendances.index') }}" class="btn btn-secondary">Reset</a>
+            </div>
         </form>
     </div>
 
