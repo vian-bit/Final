@@ -89,22 +89,31 @@ class ScheduleCalendarController extends Controller
             $startDate = Carbon::parse($month . '-01')->startOfMonth();
             $endDate = Carbon::parse($month . '-01')->endOfMonth();
             
-            // Delete all schedules for this user in this month first
+            // Hapus hanya schedule yang BELUM punya attendance dan tanggalnya BELUM lewat
             Schedule::where('user_id', $userId)
                 ->whereBetween('date', [$startDate, $endDate])
+                ->whereDate('date', '>=', today())
+                ->whereDoesntHave('attendance')
                 ->delete();
             
-            // Insert new schedules (only for dates with shift_id)
+            // Insert/update schedule (hanya untuk tanggal yang belum punya attendance)
             if (isset($request->schedules) && is_array($request->schedules)) {
                 foreach ($request->schedules as $date => $scheduleData) {
-                    // Only create schedule if shift_id is not empty
-                    if (!empty($scheduleData['shift_id'])) {
-                        Schedule::create([
-                            'user_id' => $userId,
-                            'date' => $scheduleData['date'],
-                            'shift_id' => $scheduleData['shift_id'],
-                        ]);
+                    if (empty($scheduleData['shift_id'])) continue;
+
+                    // Jangan ubah schedule yang sudah punya attendance
+                    $existing = Schedule::where('user_id', $userId)
+                        ->whereDate('date', $date)
+                        ->first();
+
+                    if ($existing && $existing->attendance()->exists()) {
+                        continue; // Skip — sudah ada attendance
                     }
+
+                    Schedule::updateOrCreate(
+                        ['user_id' => $userId, 'date' => $scheduleData['date']],
+                        ['shift_id' => $scheduleData['shift_id']]
+                    );
                 }
             }
             
