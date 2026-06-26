@@ -12,7 +12,13 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'role' => \App\Http\Middleware\RoleMiddleware::class,
+            'role'        => \App\Http\Middleware\RoleMiddleware::class,
+            'restrict.ip' => \App\Http\Middleware\RestrictByIp::class,
+        ]);
+
+        // Terapkan pembatasan IP ke semua request web
+        $middleware->web(append: [
+            \App\Http\Middleware\RestrictByIp::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
