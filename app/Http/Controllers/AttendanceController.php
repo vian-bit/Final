@@ -177,16 +177,21 @@ class AttendanceController extends Controller
     {
         $user = Auth::user();
 
-        // Default ke hari ini kalau tidak ada filter
         $startDate = $request->start_date ?? today()->format('Y-m-d');
         $endDate   = $request->end_date   ?? today()->format('Y-m-d');
 
+        // Build user list for filter dropdown
+        $filterUsers = User::where('role', 'user')
+            ->when($user->isAdmin(), fn($q) => $q->where('department_id', $user->department_id))
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
         $query = Attendance::with(['user.department', 'schedule.shift'])
             ->when($user->isAdmin(), function($q) use ($user) {
-                $q->whereHas('user', function($query) use ($user) {
-                    $query->where('department_id', $user->department_id);
-                });
+                $q->whereHas('user', fn($query) => $query->where('department_id', $user->department_id));
             })
+            ->when($request->user_id, fn($q) => $q->where('user_id', $request->user_id))
             ->whereDate('date', '>=', $startDate)
             ->whereDate('date', '<=', $endDate)
             ->orderBy('date', 'desc');
@@ -196,7 +201,7 @@ class AttendanceController extends Controller
         }
 
         $attendances = $query->get();
-        return view('attendances.export', compact('attendances', 'startDate', 'endDate'));
+        return view('attendances.export', compact('attendances', 'startDate', 'endDate', 'filterUsers'));
     }
 
     private function exportXlsx($attendances, string $startDate, string $endDate, ?string $deptName = null)

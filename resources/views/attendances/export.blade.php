@@ -8,7 +8,7 @@
 
     <div class="px-6 py-4" style="border-bottom:1px solid var(--cream-200);">
         <form method="GET" action="{{ route('attendances.export') }}">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
                 <div>
                     <label class="gh-label">Start Date</label>
                     <input type="date" name="start_date" value="{{ $startDate }}" class="gh-input">
@@ -16,6 +16,15 @@
                 <div>
                     <label class="gh-label">End Date</label>
                     <input type="date" name="end_date" value="{{ $endDate }}" class="gh-input">
+                </div>
+                <div>
+                    <label class="gh-label">User</label>
+                    <select name="user_id" class="gh-select">
+                        <option value="">— Semua User —</option>
+                        @foreach($filterUsers as $u)
+                        <option value="{{ $u->id }}" {{ request('user_id') == $u->id ? 'selected' : '' }}>{{ $u->name }}</option>
+                        @endforeach
+                    </select>
                 </div>
                 <div class="flex items-end gap-2">
                     <button type="submit" class="btn btn-primary flex-1 justify-center">
@@ -34,6 +43,9 @@
         <div class="text-sm font-bold mb-3" style="color:var(--brown-900);">
             Period: {{ \Carbon\Carbon::parse($startDate)->format('d/m/Y') }}
             @if($startDate !== $endDate) — {{ \Carbon\Carbon::parse($endDate)->format('d/m/Y') }} @endif
+            @if(request('user_id') && $filterUsers->where('id', request('user_id'))->first())
+                | User: {{ $filterUsers->where('id', request('user_id'))->first()->name }}
+            @endif
         </div>
         <div class="flex flex-wrap gap-3">
             <button onclick="window.print()" class="btn btn-success">
@@ -42,7 +54,7 @@
                 </svg>
                 Print / Save as PDF
             </button>
-            <a href="{{ route('attendances.export', ['start_date' => $startDate, 'end_date' => $endDate, 'format' => 'xlsx']) }}"
+            <a href="{{ route('attendances.export', ['start_date' => $startDate, 'end_date' => $endDate, 'user_id' => request('user_id'), 'format' => 'xlsx']) }}"
                class="btn btn-gold">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
