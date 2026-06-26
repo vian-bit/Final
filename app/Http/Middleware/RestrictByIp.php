@@ -33,15 +33,19 @@ class RestrictByIp
             return $next($request);
         }
 
+        // Halaman login & logout selalu bisa diakses (agar bisa login dulu)
+        if ($request->routeIs('login') || $request->routeIs('logout') || $request->is('login')) {
+            return $next($request);
+        }
+
         // Kalau user sudah login dan rolenya bypass, lolos
         if (auth()->check() && in_array(auth()->user()->role, $this->bypassRoles)) {
             return $next($request);
         }
 
-        // Kalau belum login, cek apakah request ke halaman login
-        // (biarkan halaman login tetap bisa diakses agar bisa login dulu)
-        if ($request->routeIs('login') || $request->routeIs('logout')) {
-            return $next($request);
+        // Kalau belum login, redirect ke login (bukan 403)
+        if (!auth()->check()) {
+            return redirect()->route('login');
         }
 
         abort(403, 'Akses tidak diizinkan dari jaringan ini.');
