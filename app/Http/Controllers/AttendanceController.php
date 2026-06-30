@@ -36,6 +36,10 @@ class AttendanceController extends Controller
             ->when(!$request->date_from && !$request->date_to && $request->date,
                 fn($q) => $q->whereDate('date', $request->date))
             ->when($request->user_id, fn($q) => $q->where('user_id', $request->user_id))
+            ->when($request->status === 'present',     fn($q) => $q->where('status', 'present'))
+            ->when($request->status === 'late',        fn($q) => $q->where('status', 'late'))
+            ->when($request->status === 'no_checkout', fn($q) => $q->whereNotNull('check_in')->whereNull('check_out'))
+            ->when($request->status === 'no_checkin',  fn($q) => $q->whereNull('check_in'))
             ->orderBy('date', 'desc')
             ->paginate(20)
             ->withQueryString();

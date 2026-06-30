@@ -25,6 +25,16 @@
                 <label class="text-xs font-bold" style="color:var(--gray-500); letter-spacing:0.06em;">SAMPAI</label>
                 <input type="date" name="date_to" value="{{ request('date_to') }}" class="gh-input" style="width:auto; min-width:150px;">
             </div>
+            <div class="flex flex-col gap-1">
+                <label class="text-xs font-bold" style="color:var(--gray-500); letter-spacing:0.06em;">STATUS</label>
+                <select name="status" class="gh-select" style="width:auto; min-width:160px;">
+                    <option value="">— Semua Status —</option>
+                    <option value="present" {{ request('status') === 'present' ? 'selected' : '' }}>✅ Tepat Waktu</option>
+                    <option value="late" {{ request('status') === 'late' ? 'selected' : '' }}>⏰ Terlambat</option>
+                    <option value="no_checkout" {{ request('status') === 'no_checkout' ? 'selected' : '' }}>🚪 Belum Check Out</option>
+                    <option value="no_checkin" {{ request('status') === 'no_checkin' ? 'selected' : '' }}>❌ Tidak Check In</option>
+                </select>
+            </div>
             @if(Auth::user()->isSuperuser() || Auth::user()->isAdmin())
             <div class="flex flex-col gap-1">
                 <label class="text-xs font-bold" style="color:var(--gray-500); letter-spacing:0.06em;">USER</label>
