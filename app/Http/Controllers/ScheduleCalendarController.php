@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Attendance;
 use App\Models\Schedule;
 use App\Models\Shift;
 use App\Models\User;
@@ -107,6 +108,15 @@ class ScheduleCalendarController extends Controller
                     }
 
                     // Admin & superuser boleh ubah jadwal hari ini meski sudah ada attendance
+                    $existing = Schedule::where('user_id', $userId)
+                        ->whereDate('date', $date)
+                        ->first();
+
+                    // Jika shift berubah dan sudah ada attendance, hapus attendance lama
+                    if ($existing && $existing->shift_id != $scheduleData['shift_id']) {
+                        Attendance::where('schedule_id', $existing->id)->delete();
+                    }
+
                     Schedule::updateOrCreate(
                         ['user_id' => $userId, 'date' => $scheduleData['date']],
                         ['shift_id' => $scheduleData['shift_id']]

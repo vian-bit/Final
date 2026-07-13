@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Attendance;
 use App\Models\Schedule;
 use App\Models\Shift;
 use App\Models\User;
@@ -86,17 +87,8 @@ class ScheduleController extends Controller
 
     public function update(Request $request, Schedule $schedule)
     {
-        \Log::info('SCHEDULE UPDATE', [
-            'schedule_id'  => $schedule->id,
-            'schedule_date'=> $schedule->date->toDateString(),
-            'today_wib'    => now('Asia/Jakarta')->toDateString(),
-            'is_past'      => $schedule->date->startOfDay()->lt(now('Asia/Jakarta')->startOfDay()),
-            'request_all'  => $request->all(),
-        ]);
-
         // Tidak boleh edit jadwal hari lampau
         if ($schedule->date->startOfDay()->lt(now('Asia/Jakarta')->startOfDay())) {
-            \Log::warning('SCHEDULE UPDATE BLOCKED: hari lampau');
             return redirect()->route('schedules.index')
                 ->with('error', 'Jadwal hari lampau tidak dapat diubah.');
         }
@@ -106,11 +98,12 @@ class ScheduleController extends Controller
             'notes'    => 'nullable|string',
         ]);
 
-        \Log::info('SCHEDULE UPDATE validated', $validated);
+        // Jika shift berubah dan sudah ada attendance, hapus attendance lama (user check-in ulang)
+        if ($schedule->shift_id != $validated['shift_id']) {
+            Attendance::where('schedule_id', $schedule->id)->delete();
+        }
 
-        $result = $schedule->update($validated);
-
-        \Log::info('SCHEDULE UPDATE result', ['result' => $result, 'new_shift_id' => $schedule->fresh()->shift_id]);
+        $schedule->update($validated);
 
         return redirect()->route('schedules.index')
             ->with('success', 'Jadwal berhasil diperbarui.');
