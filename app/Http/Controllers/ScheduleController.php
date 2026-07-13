@@ -64,7 +64,7 @@ class ScheduleController extends Controller
     public function edit(Schedule $schedule)
     {
         // Tidak boleh edit jadwal hari lampau
-        if ($schedule->date->startOfDay()->lt(today())) {
+        if ($schedule->date->startOfDay()->lt(now('Asia/Jakarta')->startOfDay())) {
             return redirect()->route('schedules.index')
                 ->with('error', 'Jadwal hari lampau tidak dapat diubah.');
         }
@@ -87,7 +87,7 @@ class ScheduleController extends Controller
     public function update(Request $request, Schedule $schedule)
     {
         // Tidak boleh edit jadwal hari lampau
-        if ($schedule->date->startOfDay()->lt(today())) {
+        if ($schedule->date->startOfDay()->lt(now('Asia/Jakarta')->startOfDay())) {
             return redirect()->route('schedules.index')
                 ->with('error', 'Jadwal hari lampau tidak dapat diubah.');
         }
