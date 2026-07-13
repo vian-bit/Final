@@ -86,8 +86,17 @@ class ScheduleController extends Controller
 
     public function update(Request $request, Schedule $schedule)
     {
+        \Log::info('SCHEDULE UPDATE', [
+            'schedule_id'  => $schedule->id,
+            'schedule_date'=> $schedule->date->toDateString(),
+            'today_wib'    => now('Asia/Jakarta')->toDateString(),
+            'is_past'      => $schedule->date->startOfDay()->lt(now('Asia/Jakarta')->startOfDay()),
+            'request_all'  => $request->all(),
+        ]);
+
         // Tidak boleh edit jadwal hari lampau
         if ($schedule->date->startOfDay()->lt(now('Asia/Jakarta')->startOfDay())) {
+            \Log::warning('SCHEDULE UPDATE BLOCKED: hari lampau');
             return redirect()->route('schedules.index')
                 ->with('error', 'Jadwal hari lampau tidak dapat diubah.');
         }
@@ -97,7 +106,11 @@ class ScheduleController extends Controller
             'notes'    => 'nullable|string',
         ]);
 
-        $schedule->update($validated);
+        \Log::info('SCHEDULE UPDATE validated', $validated);
+
+        $result = $schedule->update($validated);
+
+        \Log::info('SCHEDULE UPDATE result', ['result' => $result, 'new_shift_id' => $schedule->fresh()->shift_id]);
 
         return redirect()->route('schedules.index')
             ->with('success', 'Jadwal berhasil diperbarui.');
