@@ -63,7 +63,7 @@
                     $startOfMonth = $date->copy()->startOfMonth();
                     $startDay = $startOfMonth->dayOfWeek;
                     $daysInMonth = $startOfMonth->daysInMonth;
-                    $today = now()->format('Y-m-d');
+                    $today = now('Asia/Jakarta')->format('Y-m-d');
                 @endphp
 
                 @for($i = 0; $i < $startDay; $i++)
@@ -76,20 +76,27 @@
                     $dateKey = $currentDate->format('Y-m-d');
                     $schedule = $schedules->get($dateKey);
                     $isToday = $dateKey === $today;
+                    $isPast  = $dateKey < $today;
+                    $hasAttendance = $schedule && $schedule->attendance()->exists();
                     $dayOfWeek = $currentDate->dayOfWeek;
                 @endphp
                 <div class="p-1 md:p-2 rounded min-h-20 md:min-h-32"
                     style="border:2px solid {{ $isToday ? 'var(--brown-300)' : 'var(--cream-200)' }};
-                           background:{{ $isToday ? 'rgba(201,168,76,0.08)' : 'var(--cream-50)' }};"
+                           background:{{ $isPast ? 'var(--cream-200)' : ($isToday ? 'rgba(201,168,76,0.08)' : 'var(--cream-50)') }};
+                           opacity:{{ $isPast ? '0.6' : '1' }};"
                     data-date="{{ $dateKey }}" data-day="{{ $dayOfWeek }}">
                     <div class="text-xs md:text-sm font-bold mb-1"
                         style="color:{{ $isToday ? 'var(--brown-300)' : 'var(--brown-900)' }};">
                         {{ $day }}
+                        @if($hasAttendance)
+                        <span class="text-xs ml-1" style="color:#d97706;" title="Sudah check-in">✓</span>
+                        @endif
                     </div>
                     <select name="schedules[{{ $dateKey }}][shift_id]"
                             class="w-full px-1 py-1 rounded text-xs shift-select"
                             style="border:1px solid var(--cream-200); background:var(--cream-50); color:var(--brown-900);"
-                            data-date="{{ $dateKey }}">
+                            data-date="{{ $dateKey }}"
+                            {{ $isPast ? 'disabled' : '' }}>
                         <option value="">Off</option>
                         @foreach($shifts as $shift)
                         <option value="{{ $shift->id }}" {{ $schedule && $schedule->shift_id == $shift->id ? 'selected' : '' }}>
