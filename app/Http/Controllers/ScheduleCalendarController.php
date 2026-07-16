@@ -102,21 +102,33 @@ class ScheduleCalendarController extends Controller
                 foreach ($request->schedules as $date => $scheduleData) {
                     if (empty($scheduleData['shift_id'])) continue;
 
-                    // Jangan ubah jadwal hari lampau
-                    if (Carbon::parse($date)->startOfDay()->lt(now('Asia/Jakarta')->startOfDay())) {
-                        continue;
-                    }
+                    $isPast  = Carbon::parse($date)->startOfDay()->lt(now('Asia/Jakarta')->startOfDay());
+                    $isToday = Carbon::parse($date)->startOfDay()->eq(now('Asia/Jakarta')->startOfDay());
 
-                    // Admin & superuser boleh ubah jadwal hari ini meski sudah ada attendance
                     $existing = Schedule::where('user_id', $userId)
                         ->whereDate('date', $date)
                         ->first();
 
-                    // Jika shift berubah dan sudah ada attendance, hapus attendance lama
-                    if ($existing && $existing->shift_id != $scheduleData['shift_id']) {
-                        Attendance::where('schedule_id', $existing->id)->delete();
+                    if ($isToday) {
+                        // Hari ini: jika shift berubah, reset attendance agar user check-in ulang
+                        if ($existing && $existing->shift_id != $scheduleData['shift_id']) {
+                            Attendance::where('schedule_id', $existing->id)->delete();
+                        }
+                    } elseif ($isPast) {
+                        // Hari lampau: hanya update shift, JANGAN hapus attendance (jaga history CI/CO)
+                        if ($existing) {
+                            $existing->update(['shift_id' => $scheduleData['shift_id']]);
+                        } else {
+                            Schedule::create([
+                                'user_id'  => $userId,
+                                'date'     => $scheduleData['date'],
+                                'shift_id' => $scheduleData['shift_id'],
+                            ]);
+                        }
+                        continue; // Lewati updateOrCreate di bawah
                     }
 
+                    // Hari ini & masa depan
                     Schedule::updateOrCreate(
                         ['user_id' => $userId, 'date' => $scheduleData['date']],
                         ['shift_id' => $scheduleData['shift_id']]
