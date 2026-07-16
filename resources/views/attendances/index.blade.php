@@ -66,6 +66,9 @@
                 <th>Check In</th><th>Check Out</th>
                 <th class="hidden md:table-cell">Duration</th>
                 <th>Status</th>
+                @if(Auth::user()->isSuperuser() || Auth::user()->isAdmin())
+                <th>Aksi</th>
+                @endif
             </tr></thead>
             <tbody>
                 @forelse($attendances as $attendance)
@@ -73,8 +76,22 @@
                     <td style="color:var(--gray-500);">{{ $attendance->date->format('d/m/Y') }}</td>
                     <td class="font-bold" style="color:var(--brown-900);">{{ $attendance->user->name }}</td>
                     <td class="hidden lg:table-cell" style="color:var(--gray-500);">{{ $attendance->schedule->shift->name }}</td>
-                    <td>{{ $attendance->check_in ?? '—' }}</td>
-                    <td>{{ $attendance->check_out ?? '—' }}</td>
+                    <td>
+                        {{ $attendance->check_in ?? '—' }}
+                        @if($attendance->original_check_in && $attendance->original_check_in !== $attendance->check_in)
+                        <span class="text-xs block" style="color:var(--gray-300);" title="Original">
+                            (was: {{ $attendance->original_check_in }})
+                        </span>
+                        @endif
+                    </td>
+                    <td>
+                        {{ $attendance->check_out ?? '—' }}
+                        @if($attendance->original_check_out && $attendance->original_check_out !== $attendance->check_out)
+                        <span class="text-xs block" style="color:var(--gray-300);" title="Original">
+                            (was: {{ $attendance->original_check_out }})
+                        </span>
+                        @endif
+                    </td>
                     <td class="hidden md:table-cell" style="color:var(--gray-500);">
                         @if($attendance->check_in && $attendance->check_out)
                             @php
@@ -94,7 +111,22 @@
                             @else badge-danger @endif">
                             {{ ucfirst($attendance->status) }}
                         </span>
+                        @if($attendance->edited_at)
+                        <span class="text-xs block mt-1" style="color:var(--gray-300);" title="Diedit oleh {{ $attendance->editor?->name }} pada {{ $attendance->edited_at->format('d/m H:i') }}">
+                            ✏️ edited
+                        </span>
+                        @endif
                     </td>
+                    @if(Auth::user()->isSuperuser() || Auth::user()->isAdmin())
+                    <td>
+                        <a href="{{ route('attendances.edit', $attendance) }}" class="btn btn-secondary text-xs">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                            </svg>
+                            Edit
+                        </a>
+                    </td>
+                    @endif
                 </tr>
                 @empty
                 <tr>

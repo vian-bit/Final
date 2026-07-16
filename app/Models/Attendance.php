@@ -15,10 +15,16 @@ class Attendance extends Model
         'check_out',
         'status',
         'notes',
+        'original_check_in',
+        'original_check_out',
+        'edited_by',
+        'edited_at',
+        'edit_reason',
     ];
 
     protected $casts = [
-        'date' => 'date',
+        'date'      => 'date',
+        'edited_at' => 'datetime',
     ];
 
     public function user(): BelongsTo
@@ -29,5 +35,10 @@ class Attendance extends Model
     public function schedule(): BelongsTo
     {
         return $this->belongsTo(Schedule::class);
+    }
+
+    public function editor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'edited_by');
     }
 }

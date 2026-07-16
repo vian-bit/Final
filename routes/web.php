@@ -36,6 +36,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('schedules/bulk-store', [\App\Http\Controllers\ScheduleCalendarController::class, 'bulkStore'])->name('schedules.bulk-store');
         Route::delete('schedules/delete-schedule', [\App\Http\Controllers\ScheduleCalendarController::class, 'deleteSchedule'])->name('schedules.delete-schedule');
         Route::get('attendances/export', [AttendanceController::class, 'export'])->name('attendances.export');
+        Route::get('attendances/{attendance}/edit', [AttendanceController::class, 'editAttendance'])->name('attendances.edit');
+        Route::put('attendances/{attendance}', [AttendanceController::class, 'updateAttendance'])->name('attendances.update');
 
         // Early checkout
         Route::get('early-checkout-requests', [AttendanceController::class, 'earlyCheckoutRequests'])->name('early-checkout.index');

@@ -349,6 +349,43 @@ class AttendanceController extends Controller
         ]);
     }
 
+    public function editAttendance(Attendance $attendance)
+    {
+        // Hanya untuk data hari ini atau lampau — bukan masa depan
+        $attendance->load(['user', 'schedule.shift', 'editor']);
+        return view('attendances.edit', compact('attendance'));
+    }
+
+    public function updateAttendance(Request $request, Attendance $attendance)
+    {
+        $validated = $request->validate([
+            'check_in'    => 'nullable|date_format:H:i',
+            'check_out'   => 'nullable|date_format:H:i',
+            'status'      => 'required|in:present,late,absent',
+            'edit_reason' => 'nullable|string|max:255',
+            'notes'       => 'nullable|string|max:255',
+        ]);
+
+        // Simpan history original (hanya jika belum pernah diedit sebelumnya)
+        $originalCheckIn  = $attendance->original_check_in  ?? $attendance->check_in;
+        $originalCheckOut = $attendance->original_check_out ?? $attendance->check_out;
+
+        $attendance->update([
+            'check_in'           => $validated['check_in']  ? $validated['check_in']  . ':00' : null,
+            'check_out'          => $validated['check_out'] ? $validated['check_out'] . ':00' : null,
+            'status'             => $validated['status'],
+            'notes'              => $validated['notes'] ?? $attendance->notes,
+            'edit_reason'        => $validated['edit_reason'],
+            'original_check_in'  => $originalCheckIn,
+            'original_check_out' => $originalCheckOut,
+            'edited_by'          => Auth::id(),
+            'edited_at'          => now('Asia/Jakarta'),
+        ]);
+
+        return redirect()->route('attendances.index')
+            ->with('success', "Attendance {$attendance->user->name} ({$attendance->date->format('d/m/Y')}) berhasil diperbarui.");
+    }
+
     public function earlyCheckoutRequests()
     {
         $user = Auth::user();
